@@ -1,0 +1,35 @@
+﻿# Local Environment & Secrets
+.env
+.env.local
+.env.*.local
+js/firebase-credentials.local.js
+
+# Allow template files
+!.env.example
+!js/firebase-credentials.local.js.example
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Firebase runtime artifacts
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# Operating System Metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor Settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

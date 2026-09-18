@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Production-ready showcase of 16 essential UI/UX features missed by standard AI builders: WCAG accessibility, smooth micro-interactions, responsive navigation, and robust state management.">
+  <title>The 16 Essential UI/UX Features | Production Front-End Standard</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+  <!-- Google Fonts: Inter for clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================================
+       1. CSS CUSTOM PROPERTIES & DESIGN TOKENS (Light / Dark Themes)
+       ========================================================================= */
+    :root {
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+
+      /* Spacing Scale (8pt grid) */
+      --space-1: 0.25rem;  /* 4px */
+      --space-2: 0.5rem;   /* 8px */
+      --space-3: 0.75rem;  /* 12px */
+      --space-4: 1rem;     /* 16px */
+      --space-5: 1.25rem;  /* 20px */
+      --space-6: 1.5rem;   /* 24px */
+      --space-8: 2rem;     /* 32px */
+      --space-10: 2.5rem;  /* 40px */
+      --space-12: 3rem;    /* 48px */
+      --space-16: 4rem;    /* 64px */
+
+      /* Border Radii */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      /* Transitions */
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Light Theme (Executive Clean Slate) */
+    html[data-theme="light"] {
+      --bg-page: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --bg-subtle-hover: #e2e8f0;
+      --bg-input: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+
+      --border-default: #e2e8f0;
+      --border-muted: #cbd5e1;
+      --border-focus: #2563eb;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-inverse: #ffffff;
+
+      --accent-primary: #2563eb;
+      --accent-primary-hover: #1d4ed8;
+      --accent-primary-active: #1e40af;
+      --accent-glow: rgba(37, 99, 235, 0.25);
+
+      --accent-danger: #dc2626;
+      --accent-danger-hover: #b91c1c;
+      --accent-danger-bg: #fef2f2;
+      --accent-success: #16a34a;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --shadow-floating: 0 12px 30px -4px rgba(15, 23, 42, 0.15);
+    }
+
+    /* Dark Theme (Obsidian OLED) */
+    html[data-theme="dark"] {
+      --bg-page: #090d16;
+      --bg-surface: #0f172a;
+      --bg-surface-elevated: #1e293b;
+      --bg-subtle: #1e293b;
+      --bg-subtle-hover: #334155;
+      --bg-input: #0b1120;
+      --bg-glass: rgba(15, 23, 42, 0.88);
+
+      --border-default: #1e293b;
+      --border-muted: #334155;
+      --border-focus: #3b82f6;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-inverse: #0f172a;
+
+      --accent-primary: #3b82f6;
+      --accent-primary-hover: #2563eb;
+      --accent-primary-active: #1d4ed8;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+
+      --accent-danger: #ef4444;
+      --accent-danger-hover: #dc2626;
+      --accent-danger-bg: rgba(239, 68, 68, 0.15);
+      --accent-success: #22c55e;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.6);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+      --shadow-floating: 0 14px 34px -4px rgba(0, 0, 0, 0.85);
+    }
+
+    /* =========================================================================
+       2. BASE & RESET STYLES
+       ========================================================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      color-scheme: light dark;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color var(--transition-base), color var(--transition-base);
+    }
+
+    /* Feature 14: Accessible Skip to Content Link */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 1rem;
+      z-index: 99999;
+      background: var(--accent-primary);
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      text-decoration: none;
+      transition: top var(--transition-fast);
+    }
+    .skip-link:focus {
+      top: 1rem;
+      outline: 3px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    /* Focus-visible ring for WCAG 2.1 AA */
+    :focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    a {
+      color: var(--accent-primary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Container Utility */
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+
+    /* =========================================================================
+       FEATURE 16: TOP-MOUNTED SCROLL PROGRESS BAR
+       ========================================================================= */
+    .scroll-progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      z-index: 10000;
+      background: transparent;
+      pointer-events: none;
+    }
+    .scroll-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-primary), #60a5fa);
+      transition: width 50ms ease-out;
+    }
+
+    /* =========================================================================
+       FEATURE 13: STICKY HEADER THAT BEHAVES SMOOTHLY ON SCROLL
+       ========================================================================= */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      width: 100%;
+      background: var(--bg-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-default);
+      transition: padding var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+    }
+    .site-header.is-scrolled {
+      box-shadow: var(--shadow-md);
+      background: var(--bg-surface);
+      border-bottom-color: var(--border-muted);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      transition: height var(--transition-base);
+    }
+    .site-header.is-scrolled .header-inner {
+      height: 60px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+    .brand-logo-badge {
+      width: 38px;
+      height: 38px;
+      background: var(--accent-primary);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .nav-link {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.92rem;
+      text-decoration: none;
+      padding: 0.35rem 0.6rem;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast), background var(--transition-fast);
+    }
+    .nav-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-subtle);
+      text-decoration: none;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* =========================================================================
+       FEATURE 1: HOVER STATES & BUTTON SYSTEM
+       ========================================================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.92rem;
+      line-height: 1;
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      user-select: none;
+      position: relative;
+      transition: 
+        transform var(--transition-fast),
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        color var(--transition-fast);
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      text-decoration: none;
+    }
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-primary-hover);
+      border-color: var(--accent-primary-hover);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .btn-primary:active:not(:disabled) {
+      background: var(--accent-primary-active);
+    }
+
+    .btn-secondary {
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-subtle-hover);
+      border-color: var(--border-muted);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+    .btn-outline:hover:not(:disabled) {
+      background: var(--accent-glow);
+    }
+
+    .btn-danger {
+      background: var(--accent-danger);
+      color: #ffffff;
+      border-color: var(--accent-danger);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--accent-danger-hover);
+    }
+
+    .btn-sm {
+      padding: 0.5rem 0.85rem;
+      font-size: 0.82rem;
+      border-radius: var(--radius-sm);
+    }
+    .btn-icon-only {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border-radius: var(--radius-md);
+    }
+
+    /* =========================================================================
+       FEATURE 5: SMOOTH DARK MODE TOGGLE
+       ========================================================================= */
+    .theme-toggle-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--bg-subtle-hover);
+      border-color: var(--border-muted);
+    }
+    .theme-toggle-btn svg {
+      transition: transform var(--transition-bounce), opacity var(--transition-fast);
+    }
+    [data-theme="light"] .icon-moon {
+      display: block;
+    }
+    [data-theme="light"] .icon-sun {
+      display: none;
+    }
+    [data-theme="dark"] .icon-moon {
+      display: none;
+    }
+    [data-theme="dark"] .icon-sun {
+      display: block;
+    }
+
+    /* =========================================================================
+       FEATURE 4: RESPONSIVE MOBILE MENU
+       ========================================================================= */
+    .mobile-menu-toggle {
+      display: none;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    .mobile-nav-drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 290px;
+      height: 100vh;
+      background: var(--bg-surface);
+      z-index: 1050;
+      box-shadow: var(--shadow-xl);
+      border-left: 1px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      transition: right 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mobile-nav-drawer.is-open {
+      right: 0;
+    }
+    .mobile-nav-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1040;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition-base);
+    }
+    .mobile-nav-backdrop.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .mobile-nav-link {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      text-decoration: none;
+    }
+    .mobile-nav-link:hover {
+      background: var(--bg-subtle-hover);
+      text-decoration: none;
+    }
+
+    /* =========================================================================
+       FEATURE 6: FULL-SITE SEARCH BAR & MODAL
+       ========================================================================= */
+    .search-trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-default);
+      color: var(--text-muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .search-trigger-btn:hover {
+      background: var(--bg-subtle-hover);
+      border-color: var(--border-muted);
+      color: var(--text-primary);
+    }
+    .search-kbd-shortcut {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .search-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(6px);
+      z-index: 1200;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 5rem 1rem 2rem;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+    .search-modal-backdrop.is-open {
+      display: flex;
+      opacity: 1;
+    }
+    .search-dialog {
+      background: var(--bg-surface);
+      width: 100%;
+      max-width: 600px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      animation: modalSlideDown 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-default);
+      gap: 0.75rem;
+    }
+    .search-input-field {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-family: var(--font-sans);
+      outline: none;
+    }
+    .search-results-list {
+      max-height: 340px;
+      overflow-y: auto;
+      list-style: none;
+      padding: 0.5rem;
+    }
+    .search-result-item {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      transition: background var(--transition-fast);
+    }
+    .search-result-item:hover, .search-result-item:focus {
+      background: var(--bg-subtle);
+      outline: none;
+    }
+    .search-result-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+    .search-result-snippet {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .search-empty-state {
+      padding: 2.5rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* =========================================================================
+       FEATURE 9: CSS LOADING ANIMATIONS (Spinners & Shimmer Skeletons)
+       ========================================================================= */
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 700ms linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .pulse-dots {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      animation: pulseDot 1.2s infinite ease-in-out;
+    }
+    .pulse-dot:nth-child(2) { animation-delay: 0.2s; }
+    .pulse-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulseDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+
+    /* Shimmer Skeleton Loader */
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--bg-subtle) 25%,
+        var(--bg-subtle-hover) 37%,
+        var(--bg-subtle) 63%
+      );
+      background-size: 400% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer {
+      0% { background-position: 100% 50%; }
+      100% { background-position: 0 50%; }
+    }
+
+    /* =========================================================================
+       FEATURE 7: ACCORDION-STYLE EXPANDABLE FAQ SECTION
+       ========================================================================= */
+    .faq-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .faq-item {
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .faq-item[open] {
+      border-color: var(--border-muted);
+      box-shadow: var(--shadow-sm);
+    }
+    .faq-trigger {
+      padding: 1.15rem 1.25rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      color: var(--text-primary);
+    }
+    .faq-trigger::-webkit-details-marker {
+      display: none;
+    }
+    .faq-chevron {
+      transition: transform var(--transition-bounce);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .faq-item[open] .faq-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-primary);
+    }
+    .faq-content {
+      padding: 0 1.25rem 1.25rem;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    /* =========================================================================
+       FEATURE 8: PASSWORD VISIBILITY TOGGLE FOR FORMS
+       ========================================================================= */
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .input-password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .form-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      outline: none;
+    }
+    .input-password-wrap .form-input {
+      padding-right: 3rem;
+    }
+    .password-toggle-btn {
+      position: absolute;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.4rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast);
+    }
+    .password-toggle-btn:hover {
+      color: var(--text-primary);
+    }
+
+    /* =========================================================================
+       FEATURE 12: CLEAN NEWSLETTER SIGNUP FORM
+       ========================================================================= */
+    .newsletter-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-md);
+    }
+    .newsletter-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      align-items: flex-start;
+    }
+    .newsletter-field-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .newsletter-feedback {
+      font-size: 0.8rem;
+      font-weight: 500;
+      min-height: 1.2rem;
+    }
+    .newsletter-feedback.is-error {
+      color: var(--accent-danger);
+    }
+    .newsletter-feedback.is-success {
+      color: var(--accent-success);
+    }
+
+    /* =========================================================================
+       FEATURE 11: CONFIRMATION MODALS FOR USER ACTIONS
+       ========================================================================= */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+    .modal-backdrop.is-open {
+      display: flex;
+      opacity: 1;
+    }
+    .modal-dialog {
+      background: var(--bg-surface);
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xl);
+      padding: 1.75rem;
+      animation: modalSlideDown 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlideDown {
+      from { transform: translateY(-16px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .modal-icon-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-md);
+      background: var(--accent-danger-bg);
+      color: var(--accent-danger);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .modal-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    /* =========================================================================
+       FEATURE 10: SIMPLE, COMPLIANT COOKIE BANNER
+       ========================================================================= */
+    .cookie-banner {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 1.25rem;
+      right: 1.25rem;
+      max-width: 580px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-floating);
+      padding: 1.25rem 1.5rem;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      animation: bannerSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .cookie-banner.is-visible {
+      display: flex;
+    }
+    @keyframes bannerSlideUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .cookie-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .cookie-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .cookie-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .cookie-actions {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    /* =========================================================================
+       FEATURE 15: SCROLL BACK TO TOP BUTTON
+       ========================================================================= */
+    .back-to-top-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 6rem;
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 850;
+      opacity: 0;
+      transform: translateY(16px);
+      pointer-events: none;
+      transition: opacity var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+    }
+    .back-to-top-btn.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .back-to-top-btn:hover {
+      background: var(--accent-primary);
+      color: #ffffff;
+      border-color: var(--accent-primary);
+    }
+
+    /* =========================================================================
+       FEATURE 3: FLOATING CONTACT BUTTON (FAB) & SHEET
+       ========================================================================= */
+    .floating-contact-btn {
+      position: fixed;
+      bottom: 2rem;
+      right: 1.5rem;
+      width: 54px;
+      height: 54px;
+      border-radius: var(--radius-full);
+      background: var(--accent-primary);
+      color: #ffffff;
+      border: none;
+      box-shadow: var(--shadow-floating);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 950;
+      transition: transform var(--transition-bounce), background-color var(--transition-fast);
+    }
+    .floating-contact-btn:hover {
+      transform: scale(1.08) rotate(4deg);
+      background: var(--accent-primary-hover);
+    }
+    .floating-contact-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #10b981;
+      border: 2px solid var(--bg-surface);
+    }
+
+    .contact-popover {
+      position: fixed;
+      bottom: 6rem;
+      right: 1.5rem;
+      width: 320px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      padding: 1.25rem;
+      z-index: 950;
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      animation: modalSlideDown 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .contact-popover.is-open {
+      display: flex;
+    }
+    .contact-option-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.88rem;
+      transition: background var(--transition-fast);
+    }
+    .contact-option-item:hover {
+      background: var(--bg-subtle-hover);
+      text-decoration: none;
+    }
+
+    /* =========================================================================
+       FEATURE 2: CLEAN 404 PAGE LAYOUT SECTION / PREVIEW
+       ========================================================================= */
+    .not-found-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .not-found-badge {
+      font-family: var(--font-mono);
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent-primary);
+      letter-spacing: -0.04em;
+    }
+    .not-found-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .not-found-desc {
+      max-width: 480px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* =========================================================================
+       RESPONSIVE BREAKPOINTS (Mobile First)
+       ========================================================================= */
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+      .mobile-menu-toggle {
+        display: inline-flex;
+      }
+      .search-trigger-btn span {
+        display: none;
+      }
+      .newsletter-form {
+        flex-direction: column;
+      }
+      .newsletter-form .btn {
+        width: 100%;
+      }
+      .back-to-top-btn {
+        right: 5rem;
+        bottom: 1.5rem;
+      }
+      .floating-contact-btn {
+        bottom: 1.5rem;
+        right: 1rem;
+      }
+      .contact-popover {
+        right: 1rem;
+        width: calc(100vw - 2rem);
+        max-width: 320px;
+      }
+      .cookie-banner {
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FEATURE 16: Top Scroll Progress Bar -->
+  <div class="scroll-progress-container" aria-hidden="true">
+    <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+  </div>
+
+  <!-- FEATURE 14: Accessible "Skip to content" link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- FEATURE 13: Smooth Sticky Header -->
+  <header class="site-header" id="siteHeader">
+    <div class="container header-inner">
+      
+      <!-- Brand Logo -->
+      <a href="#hero" class="brand-group" aria-label="Component Suite Home">
+        <div class="brand-logo-badge">✦</div>
+        <span class="brand-name">EliteUI/UX</span>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav" aria-label="Primary navigation">
+        <a href="#features" class="nav-link">Interactive Buttons</a>
+        <a href="#faq" class="nav-link">Accordion FAQ</a>
+        <a href="#forms" class="nav-link">Secure Forms</a>
+        <a href="#error-preview" class="nav-link">404 Layout</a>
+      </nav>
+
+      <!-- Header Action Controls -->
+      <div class="header-actions">
+        
+        <!-- FEATURE 6: Full-Site Search Trigger -->
+        <button type="button" class="search-trigger-btn" id="searchTriggerBtn" aria-label="Search website content (Press Ctrl+K)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search docs...</span>
+          <kbd class="search-kbd-shortcut">Ctrl K</kbd>
+        </button>
+
+        <!-- FEATURE 5: Smooth Dark Mode Toggle Button -->
+        <button type="button" class="btn btn-secondary btn-icon-only theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle dark/light theme" aria-pressed="false">
+          <!-- Moon icon for light mode -->
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <!-- Sun icon for dark mode -->
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <!-- FEATURE 4: Mobile Hamburger Menu Button -->
+        <button type="button" class="btn btn-secondary btn-icon-only mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open mobile navigation" aria-expanded="false" aria-controls="mobileNavDrawer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURE 4: Mobile Navigation Drawer & Backdrop -->
+  <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+  <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Mobile Navigation" aria-hidden="true">
+    <div class="mobile-nav-header">
+      <div class="brand-group">
+        <div class="brand-logo-badge">✦</div>
+        <span class="brand-name">Menu</span>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" id="closeMobileNavBtn" aria-label="Close menu">✕</button>
+    </div>
+    <nav class="mobile-nav-links">
+      <a href="#features" class="mobile-nav-link">Interactive Buttons</a>
+      <a href="#faq" class="mobile-nav-link">Accordion FAQ</a>
+      <a href="#forms" class="mobile-nav-link">Forms &amp; Newsletter</a>
+      <a href="#error-preview" class="mobile-nav-link">404 Error Layout</a>
+      <a href="#modals" class="mobile-nav-link">Confirmation Dialog</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main id="main-content" tabindex="-1">
+    
+    <!-- Hero / Section 1: Buttons & Hover States -->
+    <section class="container" id="hero" style="padding-top: 3.5rem; padding-bottom: 3.5rem;">
+      <div style="max-width: 760px; margin: 0 auto; text-align: center;">
+        <span style="display: inline-block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-primary); background: var(--bg-subtle); padding: 4px 12px; border-radius: var(--radius-full); margin-bottom: 1rem;">
+          Production Frontend Standard
+        </span>
+        <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1rem;">
+          16 Essential UI/UX Details Standard AI Builders Miss
+        </h1>
+        <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
+          Every interactive element below is fully functional, keyboard navigable, WCAG 2.1 AA compliant, and built with clean, zero-dependency HTML, CSS, and JavaScript.
+        </p>
+
+        <!-- FEATURE 1: Hover States on Diverse Buttons -->
+        <div id="features" style="display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" id="demoPrimaryBtn">
+            <span>Primary Action</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          <button type="button" class="btn btn-secondary">Secondary Lift</button>
+          <button type="button" class="btn btn-outline">Outline Focus</button>
+          <!-- FEATURE 11: Confirmation Modal Trigger -->
+          <button type="button" class="btn btn-danger" id="openConfirmModalBtn" aria-haspopup="dialog">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Trigger Confirmation</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: FEATURE 9: CSS Loading Animations & Skeletons -->
+    <section class="container" style="padding-bottom: 3.5rem;">
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+        <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Feature 9: CSS Loading Animations</h2>
+        <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.5rem;">Non-blocking feedback states: button spinner, pulse dots, and modern skeleton shimmer cards.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          
+          <!-- Interactive Button Spinner -->
+          <div style="padding: 1.25rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;">Button Loader Transition</div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">Click to simulate an asynchronous network request.</p>
+            <button type="button" class="btn btn-primary" id="asyncLoadingBtn">
+              <span id="btnLabel">Fetch Data</span>
+            </button>
+          </div>
+
+          <!-- Pulsing Dots -->
+          <div style="padding: 1.25rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;">Pulsing Status Dots</div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">Smooth pulsing animation for background polling.</p>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div class="pulse-dots" role="status" aria-label="Syncing with database">
+                <span class="pulse-dot"></span>
+                <span class="pulse-dot"></span>
+                <span class="pulse-dot"></span>
+              </div>
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Syncing changes...</span>
+            </div>
+          </div>
+
+          <!-- Shimmer Skeleton Card -->
+          <div style="padding: 1.25rem; background: var(--bg-subtle); border-radius: var(--radius-md);" aria-busy="true" aria-label="Loading content placeholder">
+            <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;">Shimmer Skeleton Card</div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+              <div class="skeleton" style="width: 40px; height: 40px; border-radius: var(--radius-md);"></div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 0.4rem;">
+                <div class="skeleton" style="height: 12px; width: 70%;"></div>
+                <div class="skeleton" style="height: 10px; width: 45%;"></div>
+              </div>
+            </div>
+            <div class="skeleton" style="height: 38px; width: 100%; border-radius: var(--radius-sm);"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Forms, Passwords, and Newsletter (Features 8 & 12) -->
+    <section class="container" id="forms" style="padding-bottom: 3.5rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+        
+        <!-- FEATURE 8: Password Visibility Toggle Form -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Feature 8: Password Visibility Toggle</h2>
+          <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1.25rem;">Accessible toggle changing input type between text and password with live ARIA state.</p>
+
+          <form id="passwordDemoForm" onsubmit="event.preventDefault();">
+            <div class="form-group">
+              <label for="demoEmailInput" class="form-label">Email address</label>
+              <input type="email" id="demoEmailInput" class="form-input" placeholder="you@company.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label for="demoPasswordInput" class="form-label">Master password</label>
+              <div class="input-password-wrap">
+                <input type="password" id="demoPasswordInput" class="form-input" placeholder="Enter secure key" required autocomplete="current-password">
+                <button type="button" class="password-toggle-btn" id="passwordToggleBtn" aria-label="Show password" aria-controls="demoPasswordInput">
+                  <!-- Eye Icon (Show) -->
+                  <svg id="eyeIconShow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <!-- Eye Off Icon (Hide) -->
+                  <svg id="eyeIconHide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In Safely</button>
+          </form>
+        </div>
+
+        <!-- FEATURE 12: Clean Newsletter Signup Form -->
+        <div class="newsletter-box">
+          <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Feature 12: Newsletter Signup Form</h2>
+          <p style="font-size: 0.92rem; color: var(--text-muted);">Real-time regex email validation, animated loading submit, and accessible status messages.</p>
+
+          <form id="newsletterForm" class="newsletter-form" novalidate>
+            <div class="newsletter-field-group">
+              <label for="newsletterEmail" class="form-label" style="font-size: 0.82rem;">Your work email</label>
+              <input type="email" id="newsletterEmail" class="form-input" placeholder="alex@domain.com" required autocomplete="email" aria-describedby="newsletterFeedback">
+              <div id="newsletterFeedback" class="newsletter-feedback" aria-live="polite"></div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="newsletterSubmitBtn" style="margin-top: 1.6rem;">
+              <span>Subscribe</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Section 4: FEATURE 7: Accordion-Style Expandable FAQ Section -->
+    <section class="container" id="faq" style="padding-bottom: 3.5rem;">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; text-align: center; margin-bottom: 0.5rem;">
+          Feature 7: Expandable FAQ Accordion
+        </h2>
+        <p style="font-size: 1rem; color: var(--text-muted); text-align: center; margin-bottom: 2rem;">
+          Semantic HTML5 details/summary markup with animated chevron rotations and full keyboard support.
+        </p>
+
+        <div class="faq-accordion" id="faqAccordion">
+          
+          <details class="faq-item" open>
+            <summary class="faq-trigger">
+              <span>Why do standard AI builders miss essential UI/UX features?</span>
+              <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-content">
+              Most AI builders generate superficial layouts without testing keyboard navigation, focus management, screen readers, or edge cases like zero-scroll tables and dynamic sticky headers. Implementing production details creates the difference between an amateur prototype and an enterprise application.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-trigger">
+              <span>How does this code ensure WCAG 2.1 AA compliance?</span>
+              <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-content">
+              All interactive controls feature explicit ARIA attributes (<code>aria-label</code>, <code>aria-expanded</code>, <code>aria-controls</code>), minimum 44×44px touch targets on mobile, high-contrast focus rings (<code>:focus-visible</code>), and a top-level skip-to-content bypass.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-trigger">
+              <span>Can these 16 features be copy-pasted into any web framework?</span>
+              <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-content">
+              Yes. Everything is constructed using vanilla HTML, standard CSS custom properties, and modular JavaScript without external frameworks or NPM dependencies. You can integrate them directly into React, Vue, Svelte, Next.js, or plain HTML.
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: FEATURE 2: Clean 404 Page Layout Section / Component -->
+    <section class="container" id="error-preview" style="padding-bottom: 5rem;">
+      <div class="not-found-card">
+        <span class="not-found-badge">404</span>
+        <h2 class="not-found-title">Page Not Found in Coordinates</h2>
+        <p class="not-found-desc">
+          The requested hardware manifest, ledger, or page URL has either been archived, moved to another vault shelf, or does not exist.
+        </p>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem;">
+          <a href="#hero" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Return to Dashboard</span>
+          </a>
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('searchTriggerBtn').click();">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search Documentation</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       FEATURE 11: CONFIRMATION MODAL FOR USER ACTIONS
+       ========================================================================= -->
+  <div class="modal-backdrop" id="confirmModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalDesc">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-icon-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <div>
+          <h3 id="confirmModalTitle" class="modal-title">Delete Hardware Entry?</h3>
+          <p id="confirmModalDesc" class="modal-desc">This action will permanently purge this component from the custody ledger. This operation cannot be undone.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelConfirmModalBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="executeConfirmModalBtn">Yes, Purge Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       FEATURE 6: FULL-SITE SEARCH MODAL
+       ========================================================================= */ -->
+  <div class="search-modal-backdrop" id="searchModalBackdrop" role="dialog" aria-modal="true" aria-label="Site search">
+    <div class="search-dialog">
+      <div class="search-input-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" id="siteSearchInput" class="search-input-field" placeholder="Search features, guides, FAQs..." autocomplete="off">
+        <kbd class="search-kbd-shortcut" id="closeSearchKbd">ESC</kbd>
+      </div>
+      <ul class="search-results-list" id="searchResultsList" role="listbox">
+        <!-- Results populated dynamically via JavaScript -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       FEATURE 10: SIMPLE, COMPLIANT COOKIE BANNER
+       ========================================================================= -->
+  <aside class="cookie-banner" id="cookieBanner" role="region" aria-label="Cookie consent">
+    <div class="cookie-header">
+      <span style="font-size: 1.5rem;">🍪</span>
+      <h3 class="cookie-title">Cookie &amp; Privacy Preferences</h3>
+    </div>
+    <p class="cookie-text">
+      We use strictly necessary cookies to ensure basic vault functionality, session persistence, and theme preferences. No intrusive ad-tracking scripts are executed.
+    </p>
+    <div class="cookie-actions">
+      <button type="button" class="btn btn-primary btn-sm" id="acceptAllCookiesBtn">Accept All</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="acceptEssentialCookiesBtn">Essential Only</button>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       FEATURE 15: SCROLL BACK TO TOP BUTTON
+       ========================================================================= -->
+  <button type="button" class="back-to-top-btn" id="backToTopBtn" aria-label="Scroll back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+  </button>
+
+  <!-- =========================================================================
+       FEATURE 3: FLOATING CONTACT BUTTON & SHEET
+       ========================================================================= -->
+  <button type="button" class="floating-contact-btn" id="floatingContactBtn" aria-label="Open support options" aria-haspopup="true" aria-expanded="false">
+    <span class="floating-contact-badge" aria-hidden="true"></span>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  </button>
+
+  <div class="contact-popover" id="contactPopover" role="dialog" aria-label="Quick contact channels">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+      <h4 style="font-size: 0.95rem; font-weight: 700;">Connect with Engineering</h4>
+      <button type="button" style="background: none; border: none; cursor: pointer; color: var(--text-muted);" id="closeContactPopoverBtn" aria-label="Close contact popover">✕</button>
+    </div>
+    <a href="mailto:support@vault.internal" class="contact-option-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+      <span>Email Support (Tickets)</span>
+    </a>
+    <a href="tel:+18005550199" class="contact-option-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+      <span>Emergency Hardware Hotline</span>
+    </a>
+  </div>
+
+  <!-- =========================================================================
+       CLEAN, MODULAR JAVASCRIPT (ZERO DEPENDENCIES)
+       ========================================================================= -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* -----------------------------------------------------------------------
+         1. FEATURE 16: TOP SCROLL PROGRESS BAR
+         ----------------------------------------------------------------------- */
+      const scrollProgressBar = document.getElementById('scrollProgressBar');
+      function updateScrollProgress() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+        if (scrollProgressBar) {
+          scrollProgressBar.style.width = `${progress}%`;
+        }
+      }
+
+      /* -----------------------------------------------------------------------
+         2. FEATURE 13: STICKY HEADER SCROLL BEHAVIOR & FEATURE 15: BACK TO TOP
+         ----------------------------------------------------------------------- */
+      const siteHeader = document.getElementById('siteHeader');
+      const backToTopBtn = document.getElementById('backToTopBtn');
+
+      function handleWindowScroll() {
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        
+        // Sticky Header shrink & shadow
+        if (siteHeader) {
+          siteHeader.classList.toggle('is-scrolled', scrollY > 20);
+        }
+
+        // Back to top button visibility (> 300px)
+        if (backToTopBtn) {
+          backToTopBtn.classList.toggle('is-visible', scrollY > 300);
+        }
+
+        // Update progress bar
+        updateScrollProgress();
+      }
+
+      window.addEventListener('scroll', handleWindowScroll, { passive: true });
+
+      if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         3. FEATURE 5: SMOOTH DARK MODE TOGGLE WITH PERSISTENCE
+         ----------------------------------------------------------------------- */
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const rootHtml = document.documentElement;
+
+      // Detect saved preference or OS default
+      const savedTheme = localStorage.getItem('site_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      
+      setTheme(initialTheme);
+
+      function setTheme(theme) {
+        rootHtml.setAttribute('data-theme', theme);
+        localStorage.setItem('site_theme', theme);
+        if (themeToggleBtn) {
+          themeToggleBtn.setAttribute('aria-pressed', theme === 'dark');
+          themeToggleBtn.setAttribute('title', `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`);
+        }
+      }
+
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+          const current = rootHtml.getAttribute('data-theme');
+          setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         4. FEATURE 4: RESPONSIVE MOBILE MENU (DRAWER & TRAP)
+         ----------------------------------------------------------------------- */
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const mobileNavDrawer = document.getElementById('mobileNavDrawer');
+      const mobileNavBackdrop = document.getElementById('mobileNavBackdrop');
+      const closeMobileNavBtn = document.getElementById('closeMobileNavBtn');
+
+      function openMobileMenu() {
+        if (!mobileNavDrawer) return;
+        mobileNavDrawer.classList.add('is-open');
+        mobileNavBackdrop.classList.add('is-open');
+        mobileNavDrawer.setAttribute('aria-hidden', 'false');
+        mobileMenuToggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileMenu() {
+        if (!mobileNavDrawer) return;
+        mobileNavDrawer.classList.remove('is-open');
+        mobileNavBackdrop.classList.remove('is-open');
+        mobileNavDrawer.setAttribute('aria-hidden', 'true');
+        mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', openMobileMenu);
+      if (closeMobileNavBtn) closeMobileNavBtn.addEventListener('click', closeMobileMenu);
+      if (mobileNavBackdrop) mobileNavBackdrop.addEventListener('click', closeMobileMenu);
+
+      // Close mobile drawer when clicking any link
+      document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+      });
+
+      /* -----------------------------------------------------------------------
+         5. FEATURE 6: FUNCTIONAL FULL-SITE SEARCH BAR & MODAL
+         ----------------------------------------------------------------------- */
+      const searchTriggerBtn = document.getElementById('searchTriggerBtn');
+      const searchModalBackdrop = document.getElementById('searchModalBackdrop');
+      const siteSearchInput = document.getElementById('siteSearchInput');
+      const searchResultsList = document.getElementById('searchResultsList');
+
+      // Index of searchable content on the page
+      const searchableIndex = [
+        { title: 'Hover states on buttons', section: '#features', desc: 'CSS transforms, active states, focus-visible rings and smooth transitions.' },
+        { title: 'Clean 404 page layout', section: '#error-preview', desc: 'Friendly error code, explanation, search shortcut, and dashboard link.' },
+        { title: 'Floating contact button (FAB)', section: '#hero', desc: 'Fixed action button with unread badge and direct support options.' },
+        { title: 'Responsive Mobile Menu', section: '#hero', desc: 'Accessible drawer with body scroll lock and escape-key dismissal.' },
+        { title: 'Smooth Dark mode toggle', section: '#hero', desc: 'CSS variable tokens, localStorage persistence, and OS preference detection.' },
+        { title: 'Full site search bar', section: '#hero', desc: 'Modal search with live filtering, keyboard arrow navigation, and Ctrl+K shortcut.' },
+        { title: 'Expandable FAQ Accordion', section: '#faq', desc: 'Semantic details/summary elements with rotating SVG chevrons.' },
+        { title: 'Password visibility toggle', section: '#forms', desc: 'Eye toggle updating input type between password and text with ARIA states.' },
+        { title: 'CSS Loading animations', section: '#hero', desc: 'Spinners, pulsing dots, and modern skeleton shimmer cards.' },
+        { title: 'Compliant cookie banner', section: '#hero', desc: 'Consent preferences with persistence in localStorage.' },
+        { title: 'Confirmation modal dialogs', section: '#features', desc: 'Backdrop blur, focus trap, and safe execution callbacks.' },
+        { title: 'Newsletter signup form', section: '#forms', desc: 'Real-time regex email validation and accessible live status announcement.' },
+        { title: 'Sticky header scroll behavior', section: '#hero', desc: 'Smooth height reduction, shadow elevation, and blur on scroll.' },
+        { title: 'Skip to content accessibility', section: '#hero', desc: 'Keyboard bypass link jumping straight to main-content.' },
+        { title: 'Scroll back to top button', section: '#hero', desc: 'Floating circular button appearing dynamically after scrolling 300px.' },
+        { title: 'Top-mounted scroll progress bar', section: '#hero', desc: 'Real-time reading progress indicator pinned to top of viewport.' }
+      ];
+
+      function openSearchModal() {
+        if (!searchModalBackdrop) return;
+        searchModalBackdrop.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+          if (siteSearchInput) {
+            siteSearchInput.value = '';
+            siteSearchInput.focus();
+            renderSearchResults('');
+          }
+        }, 50);
+      }
+
+      function closeSearchModal() {
+        if (!searchModalBackdrop) return;
+        searchModalBackdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+
+      function renderSearchResults(query) {
+        if (!searchResultsList) return;
+        const q = query.trim().toLowerCase();
+        const matches = q === '' 
+          ? searchableIndex.slice(0, 5) 
+          : searchableIndex.filter(item => item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q));
+
+        if (matches.length === 0) {
+          searchResultsList.innerHTML = `<li class="search-empty-state">No matching features found for "${query}". Try searching "modal", "menu", or "dark mode".</li>`;
+          return;
+        }
+
+        searchResultsList.innerHTML = matches.map(item => `
+          <li class="search-result-item" tabindex="0" data-href="${item.section}">
+            <div class="search-result-title">${item.title}</div>
+            <div class="search-result-snippet">${item.desc}</div>
+          </li>
+        `).join('');
+
+        // Attach click & enter listener to results
+        searchResultsList.querySelectorAll('.search-result-item').forEach(item => {
+          function navigate() {
+            const href = item.getAttribute('data-href');
+            closeSearchModal();
+            if (href) {
+              const target = document.querySelector(href);
+              if (target) target.scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+          item.addEventListener('click', navigate);
+          item.addEventListener('keydown', e => {
+            if (e.key === 'Enter') navigate();
+          });
+        });
+      }
+
+      if (searchTriggerBtn) searchTriggerBtn.addEventListener('click', openSearchModal);
+      if (searchModalBackdrop) {
+        searchModalBackdrop.addEventListener('click', e => {
+          if (e.target === searchModalBackdrop) closeSearchModal();
+        });
+      }
+      if (siteSearchInput) {
+        siteSearchInput.addEventListener('input', e => renderSearchResults(e.target.value));
+      }
+
+      // Keyboard Shortcut: Ctrl+K or / opens search; Escape closes
+      document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          openSearchModal();
+        } else if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          openSearchModal();
+        } else if (e.key === 'Escape') {
+          closeSearchModal();
+          closeConfirmModal();
+          closeMobileMenu();
+          if (contactPopover) contactPopover.classList.remove('is-open');
+        }
+      });
+
+      /* -----------------------------------------------------------------------
+         6. FEATURE 8: PASSWORD VISIBILITY TOGGLE
+         ----------------------------------------------------------------------- */
+      const passwordToggleBtn = document.getElementById('passwordToggleBtn');
+      const demoPasswordInput = document.getElementById('demoPasswordInput');
+      const eyeIconShow = document.getElementById('eyeIconShow');
+      const eyeIconHide = document.getElementById('eyeIconHide');
+
+      if (passwordToggleBtn && demoPasswordInput) {
+        passwordToggleBtn.addEventListener('click', () => {
+          const isCurrentlyPassword = demoPasswordInput.type === 'password';
+          demoPasswordInput.type = isCurrentlyPassword ? 'text' : 'password';
+          
+          if (eyeIconShow && eyeIconHide) {
+            eyeIconShow.style.display = isCurrentlyPassword ? 'none' : 'block';
+            eyeIconHide.style.display = isCurrentlyPassword ? 'block' : 'none';
+          }
+
+          passwordToggleBtn.setAttribute('aria-label', isCurrentlyPassword ? 'Hide password' : 'Show password');
+          demoPasswordInput.focus();
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         7. FEATURE 9: ASYNC LOADING BUTTON DEMO
+         ----------------------------------------------------------------------- */
+      const asyncLoadingBtn = document.getElementById('asyncLoadingBtn');
+      const btnLabel = document.getElementById('btnLabel');
+
+      if (asyncLoadingBtn && btnLabel) {
+        asyncLoadingBtn.addEventListener('click', () => {
+          asyncLoadingBtn.disabled = true;
+          btnLabel.innerHTML = `<span class="spinner" aria-hidden="true"></span> Fetching...`;
+          setTimeout(() => {
+            asyncLoadingBtn.disabled = false;
+            btnLabel.textContent = 'Data Loaded ✓';
+            setTimeout(() => { btnLabel.textContent = 'Fetch Data'; }, 2000);
+          }, 1500);
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         8. FEATURE 12: CLEAN NEWSLETTER FORM VALIDATION
+         ----------------------------------------------------------------------- */
+      const newsletterForm = document.getElementById('newsletterForm');
+      const newsletterEmail = document.getElementById('newsletterEmail');
+      const newsletterFeedback = document.getElementById('newsletterFeedback');
+      const newsletterSubmitBtn = document.getElementById('newsletterSubmitBtn');
+
+      if (newsletterForm && newsletterEmail && newsletterFeedback) {
+        newsletterForm.addEventListener('submit', e => {
+          e.preventDefault();
+          const emailVal = newsletterEmail.value.trim();
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+          if (!emailVal || !emailRegex.test(emailVal)) {
+            newsletterFeedback.textContent = 'Please provide a valid email address (e.g. name@domain.com)';
+            newsletterFeedback.className = 'newsletter-feedback is-error';
+            newsletterEmail.setAttribute('aria-invalid', 'true');
+            newsletterEmail.focus();
+            return;
+          }
+
+          // Simulate asynchronous submission
+          newsletterEmail.setAttribute('aria-invalid', 'false');
+          newsletterSubmitBtn.disabled = true;
+          newsletterFeedback.textContent = 'Subscribing...';
+          newsletterFeedback.className = 'newsletter-feedback';
+
+          setTimeout(() => {
+            newsletterSubmitBtn.disabled = false;
+            newsletterFeedback.textContent = '✓ Subscribed successfully! Check your inbox for confirmation.';
+            newsletterFeedback.className = 'newsletter-feedback is-success';
+            newsletterEmail.value = '';
+          }, 1000);
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         9. FEATURE 11: CONFIRMATION MODAL DIALOG
+         ----------------------------------------------------------------------- */
+      const openConfirmModalBtn = document.getElementById('openConfirmModalBtn');
+      const confirmModalBackdrop = document.getElementById('confirmModalBackdrop');
+      const cancelConfirmModalBtn = document.getElementById('cancelConfirmModalBtn');
+      const executeConfirmModalBtn = document.getElementById('executeConfirmModalBtn');
+
+      function openConfirmModal() {
+        if (!confirmModalBackdrop) return;
+        confirmModalBackdrop.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        if (cancelConfirmModalBtn) cancelConfirmModalBtn.focus();
+      }
+
+      function closeConfirmModal() {
+        if (!confirmModalBackdrop) return;
+        confirmModalBackdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+        if (openConfirmModalBtn) openConfirmModalBtn.focus();
+      }
+
+      if (openConfirmModalBtn) openConfirmModalBtn.addEventListener('click', openConfirmModal);
+      if (cancelConfirmModalBtn) cancelConfirmModalBtn.addEventListener('click', closeConfirmModal);
+      if (executeConfirmModalBtn) {
+        executeConfirmModalBtn.addEventListener('click', () => {
+          alert('Action confirmed: Item purged successfully.');
+          closeConfirmModal();
+        });
+      }
+      if (confirmModalBackdrop) {
+        confirmModalBackdrop.addEventListener('click', e => {
+          if (e.target === confirmModalBackdrop) closeConfirmModal();
+        });
+      }
+
+      /* -----------------------------------------------------------------------
+         10. FEATURE 10: SIMPLE, COMPLIANT COOKIE BANNER
+         ----------------------------------------------------------------------- */
+      const cookieBanner = document.getElementById('cookieBanner');
+      const acceptAllCookiesBtn = document.getElementById('acceptAllCookiesBtn');
+      const acceptEssentialCookiesBtn = document.getElementById('acceptEssentialCookiesBtn');
+
+      const cookieConsent = localStorage.getItem('site_cookie_consent');
+      if (!cookieConsent && cookieBanner) {
+        // Delay appearance slightly for smooth entrance
+        setTimeout(() => {
+          cookieBanner.classList.add('is-visible');
+        }, 800);
+      }
+
+      function setCookiePreference(level) {
+        localStorage.setItem('site_cookie_consent', level);
+        if (cookieBanner) cookieBanner.classList.remove('is-visible');
+      }
+
+      if (acceptAllCookiesBtn) {
+        acceptAllCookiesBtn.addEventListener('click', () => setCookiePreference('all'));
+      }
+      if (acceptEssentialCookiesBtn) {
+        acceptEssentialCookiesBtn.addEventListener('click', () => setCookiePreference('essential'));
+      }
+
+      /* -----------------------------------------------------------------------
+         11. FEATURE 3: FLOATING CONTACT BUTTON & POPOVER
+         ----------------------------------------------------------------------- */
+      const floatingContactBtn = document.getElementById('floatingContactBtn');
+      const contactPopover = document.getElementById('contactPopover');
+      const closeContactPopoverBtn = document.getElementById('closeContactPopoverBtn');
+
+      if (floatingContactBtn && contactPopover) {
+        floatingContactBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          const isOpen = contactPopover.classList.toggle('is-open');
+          floatingContactBtn.setAttribute('aria-expanded', isOpen);
+        });
+
+        if (closeContactPopoverBtn) {
+          closeContactPopoverBtn.addEventListener('click', () => {
+            contactPopover.classList.remove('is-open');
+            floatingContactBtn.setAttribute('aria-expanded', 'false');
+          });
+        }
+
+        // Close on outside click
+        document.addEventListener('click', e => {
+          if (!contactPopover.contains(e.target) && e.target !== floatingContactBtn) {
+            contactPopover.classList.remove('is-open');
+            floatingContactBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>

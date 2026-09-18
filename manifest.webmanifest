@@ -1,0 +1,66 @@
+{
+  "name": "Component Vault & Custody Tracker",
+  "short_name": "Component Vault",
+  "description": "Streamline Moderne hardware lab inventory, component custody, and project tracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#0b111a",
+  "theme_color": "#0b111a",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "utilities",
+    "productivity",
+    "hardware"
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Component",
+      "short_name": "Add",
+      "description": "Log a new hardware component to your vault",
+      "url": "./index.html?action=add",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Projects & Borrowers",
+      "short_name": "Projects",
+      "description": "View active project allocations and custody",
+      "url": "./index.html?tab=projects",
+      "icons": [
+        {
+          "src": "assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

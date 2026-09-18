@@ -1,0 +1,13 @@
+{
+  "appId": "com.componentvault.app",
+  "appName": "Component Vault",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#0b111a"
+  }
+}
