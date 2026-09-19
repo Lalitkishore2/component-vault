@@ -155,8 +155,8 @@
         const result = await this.auth.signInWithPopup(this.googleProvider);
         return this._formatGoogleUser(result.user);
       } catch (err) {
-        if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
-          console.info('Popup blocked or closed by browser. Initiating redirect auth fallback...');
+        if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/internal-error') {
+          console.info('Popup sign-in encounter (' + err.code + '). Falling back to redirect sign-in...');
           await this.auth.signInWithRedirect(this.googleProvider);
           return null;
         } else if (err.code === 'auth/unauthorized-domain') {
