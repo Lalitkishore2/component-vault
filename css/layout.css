@@ -576,8 +576,15 @@ h1, h2, h3, h4 {
 /* Metrics Ribbon - Streamline Oval Panels */
 .metrics-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
+}
+
+@media (max-width: 1079px) and (min-width: 901px) {
+  .metrics-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
 }
 
 .metric-card {
@@ -682,7 +689,7 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 1rem;
   width: 100%;
 }
 
@@ -690,7 +697,7 @@ h1, h2, h3, h4 {
   position: relative;
   min-width: 220px;
   flex: 1;
-  max-width: 520px;
+  max-width: none;
 }
 
 .search-icon {
@@ -772,7 +779,7 @@ h1, h2, h3, h4 {
   background: var(--accent-primary);
   color: #ffffff;
   border-color: var(--accent-primary);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.30);
 }
 
 .filter-toggle-btn.active svg {
@@ -813,11 +820,11 @@ h1, h2, h3, h4 {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.5rem 1.15rem;
+  padding: 0.5rem 1.25rem;
   min-height: 44px;
-  background: var(--accent-teal);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff !important;
-  border: 1px solid var(--accent-teal-border, transparent);
+  border: 1px solid #10b981;
   border-radius: var(--radius-full);
   font-family: var(--font-display);
   font-size: 0.82rem;
@@ -828,13 +835,14 @@ h1, h2, h3, h4 {
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px var(--accent-teal-glow, rgba(0, 0, 0, 0.15));
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.32);
 }
 
 .toolbar-add-btn:hover {
-  background: var(--accent-teal-hover, #2080a0);
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  border-color: #34d399;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px var(--accent-teal-glow, rgba(0, 0, 0, 0.25));
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.48);
 }
 
 .toolbar-add-btn svg {
@@ -1369,7 +1377,41 @@ h1, h2, h3, h4 {
 }
 
 /* Medium Viewports (Desktop / Laptop 901px to 1100px) - Dynamic Column Scaling */
-@media (min-width: 901px) and (max-width: 1100px) {
+@media (min-width: 901px) and (max-width: 1200px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+  .header-container {
+    gap: 0.65rem;
+  }
+  .brand-title {
+    font-size: 1rem;
+    letter-spacing: 0.10em;
+  }
+  .nav-tabs {
+    gap: 0.25rem;
+    padding: 0.25rem 0.35rem;
+  }
+  .nav-tab-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+  }
+  .tab-label-desktop {
+    display: none;
+  }
+  .tab-label-mobile {
+    display: inline;
+  }
+  .user-profile-name {
+    display: none;
+  }
+  .header-vault-badge {
+    display: none;
+  }
+  .backup-btn-text {
+    display: none;
+  }
   .data-table .col-bin,
   .data-table .col-total {
     display: none;

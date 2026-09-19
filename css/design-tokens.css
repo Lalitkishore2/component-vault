@@ -59,8 +59,8 @@
   --border-subtle: rgba(200, 205, 208, 0.6);
   --border-default: var(--moderne-chrome);
   --border-highlight: var(--moderne-chrome-light);
-  --border-focus: #2563eb;
-  --border-accent: rgba(37, 99, 235, 0.40);
+  --border-focus: #059669;
+  --border-accent: rgba(16, 185, 129, 0.35);
 
   /* Typography Colors - WCAG AA Verified */
   --text-primary: var(--moderne-charcoal);
@@ -68,18 +68,18 @@
   --text-muted: #565d66; /* Strict WCAG AA >= 4.5:1 on cream/white */
   --text-inverse: var(--moderne-white);
 
-  /* Functional Accents - Executive Sapphire & Steel */
-  --accent-primary: #2563eb;
-  --accent-primary-hover: #1d4ed8;
+  /* Functional Accents - Executive Emerald & Champagne Brass */
+  --accent-primary: #059669;
+  --accent-primary-hover: #047857;
   --accent-primary-text: #ffffff;
 
   --accent-brass: var(--moderne-brass);
   --accent-brass-bg: rgba(184, 160, 96, 0.15);
   --accent-brass-border: rgba(184, 160, 96, 0.4);
 
-  --accent-teal: #2563eb;
-  --accent-teal-bg: rgba(37, 99, 235, 0.10);
-  --accent-teal-border: rgba(37, 99, 235, 0.32);
+  --accent-teal: #059669;
+  --accent-teal-bg: rgba(5, 150, 105, 0.10);
+  --accent-teal-border: rgba(5, 150, 105, 0.30);
 
   --accent-red: var(--moderne-red);
   --accent-red-bg: rgba(184, 76, 76, 0.12);
@@ -107,8 +107,8 @@
   --border-subtle: rgba(255, 255, 255, 0.10);
   --border-default: rgba(255, 255, 255, 0.18);
   --border-highlight: rgba(255, 255, 255, 0.32);
-  --border-focus: #3b82f6;
-  --border-accent: rgba(59, 130, 246, 0.45);
+  --border-focus: #10b981;
+  --border-accent: rgba(16, 185, 129, 0.40);
 
   /* Typography Colors - High-Contrast WCAG AA & AAA */
   --text-primary: #ffffff;
@@ -116,18 +116,18 @@
   --text-muted: #94a3b8; /* 9.2:1 contrast ratio against pitch black */
   --text-inverse: #000000;
 
-  /* Functional Accents - Executive Royal Sapphire Blue & Polished Brass */
-  --accent-primary: #2563eb;
-  --accent-primary-hover: #1d4ed8;
+  /* Functional Accents - Executive Luminescent Emerald & Polished Brass */
+  --accent-primary: #10b981;
+  --accent-primary-hover: #059669;
   --accent-primary-text: #ffffff;
 
   --accent-brass: #e2c068;
   --accent-brass-bg: rgba(226, 192, 104, 0.16);
   --accent-brass-border: rgba(226, 192, 104, 0.40);
 
-  --accent-teal: #3b82f6;
-  --accent-teal-bg: rgba(59, 130, 246, 0.15);
-  --accent-teal-border: rgba(59, 130, 246, 0.40);
+  --accent-teal: #10b981;
+  --accent-teal-bg: rgba(16, 185, 129, 0.14);
+  --accent-teal-border: rgba(16, 185, 129, 0.38);
 
   --accent-red: #f87171;
   --accent-red-bg: rgba(248, 113, 113, 0.16);
