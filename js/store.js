@@ -755,14 +755,77 @@ class ComponentStore {
     }, null, 2);
   }
 
+  sanitizeComponent(c, index = 0) {
+    if (!c || typeof c !== 'object') return null;
+    const cleanId = typeof c.id === 'string' && /^[a-zA-Z0-9_-]{1,64}$/.test(c.id) 
+      ? c.id 
+      : 'comp-' + Date.now().toString(36) + index;
+    const cleanName = typeof c.name === 'string' ? c.name.trim().slice(0, 120) : '';
+    if (!cleanName) return null;
+
+    const cleanSku = typeof c.sku === 'string' ? c.sku.trim().slice(0, 60) : '';
+    const cleanCategory = typeof c.category === 'string' ? c.category.trim().slice(0, 60) : 'General';
+    const cleanBin = typeof c.locationBin === 'string' ? c.locationBin.trim().toUpperCase().slice(0, 40) : 'UNASSIGNED';
+    const cleanTotalQty = Math.max(1, Math.min(1000000, parseInt(c.totalQty, 10) || 1));
+    const cleanSpecs = typeof c.specs === 'string' ? c.specs.trim().slice(0, 1000) : '';
+    
+    let cleanImage = '';
+    if (typeof c.image === 'string') {
+      const trimmed = c.image.trim();
+      if (/^https?:\/\//i.test(trimmed) || /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed) || trimmed.startsWith('data:image/svg+xml;utf8,')) {
+        cleanImage = trimmed.slice(0, 500000); // 500KB cap per image
+      }
+    }
+
+    const cleanLoans = [];
+    if (Array.isArray(c.loans)) {
+      c.loans.forEach((l, lIdx) => {
+        if (!l || typeof l !== 'object') return;
+        cleanLoans.push({
+          id: typeof l.id === 'string' ? l.id.slice(0, 64) : 'loan-' + Date.now().toString(36) + lIdx,
+          recipientName: typeof l.recipientName === 'string' ? l.recipientName.trim().slice(0, 80) : 'Self',
+          recipientContact: typeof l.recipientContact === 'string' ? l.recipientContact.trim().slice(0, 80) : '',
+          quantity: Math.max(1, Math.min(cleanTotalQty, parseInt(l.quantity, 10) || 1)),
+          dateGiven: typeof l.dateGiven === 'string' ? l.dateGiven.slice(0, 20) : new Date().toISOString().split('T')[0],
+          returnDueDate: typeof l.returnDueDate === 'string' ? l.returnDueDate.slice(0, 20) : '',
+          project: typeof l.project === 'string' ? l.project.trim().slice(0, 80) : 'General',
+          notes: typeof l.notes === 'string' ? l.notes.trim().slice(0, 500) : '',
+          status: l.status === 'returned' ? 'returned' : 'active'
+        });
+      });
+    }
+
+    return {
+      id: cleanId,
+      name: cleanName,
+      sku: cleanSku,
+      category: cleanCategory,
+      locationBin: cleanBin,
+      totalQty: cleanTotalQty,
+      specs: cleanSpecs,
+      image: cleanImage,
+      loans: cleanLoans,
+      createdAt: typeof c.createdAt === 'string' ? c.createdAt.slice(0, 30) : new Date().toISOString(),
+      updatedAt: typeof c.updatedAt === 'string' ? c.updatedAt.slice(0, 30) : new Date().toISOString()
+    };
+  }
+
   importData(jsonString) {
     try {
       const data = JSON.parse(jsonString);
       if (!Array.isArray(data.components)) {
         throw new Error('Invalid backup file: "components" list missing.');
       }
-      this.components = data.components;
-      this.activityLog = Array.isArray(data.activityLog) ? data.activityLog : [];
+      const sanitized = data.components
+        .map((c, i) => this.sanitizeComponent(c, i))
+        .filter(Boolean);
+      if (sanitized.length === 0 && data.components.length > 0) {
+        throw new Error('No valid component entries found in backup file.');
+      }
+      this.components = sanitized;
+      this.activityLog = Array.isArray(data.activityLog) 
+        ? data.activityLog.slice(0, 200).filter(e => e && typeof e === 'object') 
+        : [];
       this.save();
       return true;
     } catch (err) {

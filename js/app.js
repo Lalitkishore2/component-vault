@@ -545,13 +545,14 @@
       borrowerChipsHTML = '<span class="no-loans-hint">None • 100% in stock</span>';
     }
 
-    const imgSource = item.image || getDefaultPlaceholderImg();
+    const imgSource = sanitizeImageUrl(item.image);
+    const safeImgAttr = escapeHTML(imgSource);
 
     return `
       <article class="component-card" data-component-id="${item.id}">
         <!-- Photo thumbnail -->
         <div class="card-media" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-          <img src="${imgSource}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async">
+          <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async">
           <div class="card-media-overlay">
             <span class="card-category-tag">${escapeHTML(item.category || 'General')}</span>
             <span class="card-bin-tag">${escapeHTML(item.locationBin || 'UNASSIGNED')}</span>
@@ -615,7 +616,8 @@
   }
 
   function createComponentTableRowHTML(item) {
-    const imgSource = item.image || getDefaultPlaceholderImg();
+    const imgSource = sanitizeImageUrl(item.image);
+    const safeImgAttr = escapeHTML(imgSource);
     
     let projectsSummary = '';
     if (item.activeLoans && item.activeLoans.length > 0) {
@@ -630,7 +632,7 @@
       <tr data-component-id="${item.id}">
         <td class="col-photo">
           <div class="table-thumb" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-            <img src="${imgSource}" alt="${escapeHTML(item.name)}" loading="lazy">
+            <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy">
           </div>
         </td>
         <td class="col-name">
@@ -1971,10 +1973,20 @@
       .replace(/'/g, '&#039;');
   }
 
-  function formatTimestamp(isoString) {
-    if (!isoString) return '';
-    const d = new Date(isoString);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  function sanitizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return getDefaultPlaceholderImg();
+    const trimmed = url.trim();
+    // Allow http, https, and data:image/(png|jpeg|jpg|webp|gif|svg+xml);base64,...
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('data:image/svg+xml;utf8,') && !trimmed.toLowerCase().includes('<script') && !trimmed.toLowerCase().includes('javascript:')) {
+      return trimmed;
+    }
+    return getDefaultPlaceholderImg();
   }
 
   function getDefaultPlaceholderImg() {
