@@ -545,7 +545,7 @@
       <article class="component-card" data-component-id="${item.id}">
         <!-- Photo thumbnail -->
         <div class="card-media" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-          <img src="${imgSource}" alt="${escapeHTML(item.name)}" loading="lazy">
+          <img src="${imgSource}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async">
           <div class="card-media-overlay">
             <span class="card-category-tag">${escapeHTML(item.category || 'General')}</span>
             <span class="card-bin-tag">${escapeHTML(item.locationBin || 'UNASSIGNED')}</span>
@@ -1286,6 +1286,19 @@
     el.viewGridBtn.addEventListener('click', () => setViewMode('grid'));
     el.viewTableBtn.addEventListener('click', () => setViewMode('table'));
 
+    // Debounce utility to prevent layout thrashing on rapid keystrokes
+    function debounce(fn, delay = 200) {
+      let timer;
+      return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    const debouncedRender = debounce(() => {
+      renderCurrentView();
+    }, 200);
+
     // Top Search input (Mobile-first & Top Bar)
     if (el.topSearchInput) {
       el.topSearchInput.addEventListener('input', () => {
@@ -1293,7 +1306,7 @@
         if (el.searchInput) el.searchInput.value = state.searchQuery;
         if (el.topSearchClearBtn) el.topSearchClearBtn.style.display = state.searchQuery.length > 0 ? 'flex' : 'none';
         if (el.searchClearBtn) el.searchClearBtn.classList.toggle('visible', state.searchQuery.length > 0);
-        renderCurrentView();
+        debouncedRender();
       });
     }
 
@@ -1344,7 +1357,7 @@
       if (el.topSearchInput) el.topSearchInput.value = state.searchQuery;
       if (el.topSearchClearBtn) el.topSearchClearBtn.style.display = state.searchQuery.length > 0 ? 'flex' : 'none';
       el.searchClearBtn.classList.toggle('visible', state.searchQuery.length > 0);
-      renderCurrentView();
+      debouncedRender();
     });
 
     el.searchClearBtn.addEventListener('click', () => {
