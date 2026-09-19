@@ -963,8 +963,19 @@ h1, h2, h3, h4 {
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.30);
 }
 
+[data-theme="dark"] .filter-toggle-btn.active {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+}
+
 .filter-toggle-btn.active svg {
   stroke: #ffffff;
+}
+
+[data-theme="dark"] .filter-toggle-btn.active svg {
+  stroke: #000000;
 }
 
 .filter-chevron {
@@ -996,6 +1007,11 @@ h1, h2, h3, h4 {
   color: var(--accent-primary);
 }
 
+[data-theme="dark"] .filter-toggle-btn.active .filter-badge {
+  background: #000000;
+  color: #ffffff;
+}
+
 /* Desktop Toolbar Add Component Button - Near Filter Option */
 .toolbar-add-btn {
   display: inline-flex;
@@ -1019,6 +1035,13 @@ h1, h2, h3, h4 {
   box-shadow: 0 4px 14px rgba(41, 118, 133, 0.32);
 }
 
+[data-theme="dark"] .toolbar-add-btn {
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #cbd5e1 100%);
+  color: #000000 !important;
+  border-color: #ffffff;
+  box-shadow: 0 2px 14px rgba(255, 255, 255, 0.22);
+}
+
 .toolbar-add-btn:hover {
   background: linear-gradient(135deg, #3895a7 0%, #205e6b 100%);
   border-color: #64B5C1;
@@ -1026,10 +1049,22 @@ h1, h2, h3, h4 {
   box-shadow: 0 6px 20px rgba(41, 118, 133, 0.48);
 }
 
+[data-theme="dark"] .toolbar-add-btn:hover {
+  background: #ffffff;
+  color: #000000 !important;
+  border-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.45);
+  transform: translateY(-1px);
+}
+
 .toolbar-add-btn svg {
   display: inline-block;
   vertical-align: middle;
   stroke: #ffffff;
+}
+
+[data-theme="dark"] .toolbar-add-btn svg {
+  stroke: #000000;
 }
 
 /* Floating Back-to-Top Button */
