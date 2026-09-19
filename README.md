@@ -49,10 +49,50 @@ Built with **vanilla semantic HTML5, CSS3 design tokens, and reactive JavaScript
 
 ## 📖 Complete Setup Guides
 
-* **[DEPLOYMENT_GUIDE.md](file:///C:/Users/LALITKO/.gemini/antigravity-ide/scratch/component-inventory/DEPLOYMENT_GUIDE.md)**: **100% Free Backend, Hosting & Mobile App Setup Tutorial**
+* **[DEPLOYMENT_GUIDE.md](file:///c:/Users/LALITKO/Desktop/projects/component-inventory/DEPLOYMENT_GUIDE.md)**: **100% Free Backend, Hosting & Mobile App Setup Tutorial**
   - How to set up Google Firebase Spark Free tier (Auth + Firestore + Security Rules).
   - How to host for free on GitHub Pages, Firebase Hosting, or Vercel.
   - How to install the mobile app and compile the Android APK.
+
+---
+
+## 🛠️ Local Setup & Private Firebase (For New Users & Contributors)
+
+### 1. Running Locally (Zero Cloud / Zero Firebase Required)
+You can run Component Vault 100% locally and offline without creating any Firebase project:
+```bash
+# 1. Clone the repository
+git clone https://github.com/Lalitkishore2/component-vault.git
+cd component-vault
+
+# 2. Start the local server
+node server.js
+```
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
+- All hardware cataloging, project custody assignments, QR generation, and search work immediately using your browser's local storage.
+- Zero external accounts, zero API keys, and zero cloud dependencies required.
+
+### 2. Setting Up Your Own Private Firebase (Optional)
+> 🔒 **Strict Isolation**: The repository contains **no hardcoded credentials**. Your local instance will **never** connect to or affect the author's published website or database.
+
+If you want to sync your private inventory across multiple devices using your own free Google Firebase account:
+1. Copy the example credentials file:
+   ```bash
+   cp js/firebase-credentials.local.js.example js/firebase-credentials.local.js
+   ```
+2. Open `js/firebase-credentials.local.js` and paste your own Firebase web app keys:
+   ```javascript
+   window.__LOCAL_FIREBASE_CONFIG__ = {
+     apiKey: "YOUR_OWN_API_KEY",
+     authDomain: "your-project.firebaseapp.com",
+     projectId: "your-project",
+     storageBucket: "your-project.firebasestorage.app",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abcdef"
+   };
+   ```
+   *(Note: `js/firebase-credentials.local.js` is ignored by `.gitignore` so your private keys will never be committed to git).*
+3. Alternatively, launch the app, log into your vault, click your profile avatar > **Cloud DB Settings**, and enter your keys directly in the browser interface.
 
 ---
 
@@ -73,16 +113,14 @@ Because the application is built entirely with client-side persistence and nativ
 4. Output directory: `./` (root).
 5. Click **Deploy**.
 
-### Option 3: Local or Self-Hosted Node Server
-```bash
-# Run with Node.js built-in HTTP server
-node server.js
-```
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser.
+### Option 3: Firebase Hosting
+1. Update `.firebaserc` with your own Firebase project ID.
+2. In `firebase.json`, set `"site": "<your-site-name>"`.
+3. Run `npx firebase-tools deploy --only hosting`.
 
 ---
 
-## 🔑 Google Sign-In & Cloud Database (Hosted Websites)
+## 🔑 Google Sign-In & Cloud Database Setup (Your Own Firebase)
 
 When you deploy Component Vault to a public URL (e.g. **GitHub Pages**, **Vercel**, **Netlify**, or your own domain), you can enable **1-Click Google Sign-In** and **Cloud Firestore Database Sync** across all your devices:
 
