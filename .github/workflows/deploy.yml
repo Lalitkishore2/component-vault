@@ -15,8 +15,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Check Firebase Secret Availability
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_VAULT == '' }}
+        run: |
+          echo "Notice: FIREBASE_SERVICE_ACCOUNT_COMPONENT_VAULT secret is not configured in this repository."
+          echo "To enable automatic Firebase Hosting deployments on git push:"
+          echo "1. Go to Firebase Console > Project Settings > Service Accounts > Generate new private key."
+          echo "2. Add the JSON content as secret FIREBASE_SERVICE_ACCOUNT_COMPONENT_VAULT in GitHub Settings > Secrets and variables > Actions."
+
       - name: Deploy to Firebase Hosting (Live Channel on Main)
-        if: github.event_name == 'push'
+        if: ${{ github.event_name == 'push' && secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_VAULT != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
@@ -25,7 +33,7 @@ jobs:
           projectId: component-vault-e061e
 
       - name: Deploy to Firebase Hosting (Preview Channel on Pull Request)
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && secrets.FIREBASE_SERVICE_ACCOUNT_COMPONENT_VAULT != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
