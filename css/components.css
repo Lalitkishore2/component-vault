@@ -1425,110 +1425,113 @@ svg {
   gap: 2px;
 }
 
+/* Hardware Vaults in User Profile Dropdown */
 .user-vault-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: var(--radius-sm) !important;
   background: transparent;
-  border: none;
+  border: none !important;
+  border-left: 3px solid transparent !important;
   cursor: pointer;
-  text-align: left;
-  transition: all var(--transition-fast);
+  text-align: left !important;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
   color: var(--text-primary);
-  box-sizing: border-box;
+  box-sizing: border-box !important;
+  gap: 0.5rem;
+  user-select: none;
 }
 
 .user-vault-item:hover {
-  background: var(--bg-subtle);
+  background: var(--bg-subtle) !important;
 }
 
 .user-vault-item.active {
-  background: rgba(61, 123, 138, 0.18);
-  border-left: 3px solid var(--accent-teal);
+  background: rgba(41, 118, 133, 0.16) !important;
+  border-left: 3px solid var(--accent-teal) !important;
 }
 
-.user-vault-row {
+.user-vault-item-info {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  box-sizing: border-box;
-  padding: 0.12rem 0.25rem 0.12rem 0;
-}
-
-.user-vault-row:hover {
-  background: var(--bg-subtle);
-}
-
-.user-vault-row.active {
-  background: rgba(61, 123, 138, 0.18);
-  border-left: 3px solid var(--accent-teal);
-}
-
-.user-vault-select-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex: 1;
+  flex-direction: column;
   min-width: 0;
-  padding: 0.45rem 0.65rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
+  flex: 1;
   text-align: left;
-  color: var(--text-primary);
-  font-family: inherit;
-  box-sizing: border-box;
 }
 
-.user-vault-actions {
+.user-vault-item-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+.user-vault-item.active .user-vault-item-name {
+  color: var(--accent-teal);
+  font-weight: 600;
+}
+
+.user-vault-item-tag {
+  font-size: 0.69rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.user-vault-item-actions {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
-  padding-right: 0.4rem;
+  gap: 0.25rem;
   flex-shrink: 0;
-  opacity: 0.8;
-  transition: opacity var(--transition-fast);
 }
 
-.user-vault-row:hover .user-vault-actions {
-  opacity: 1;
-}
-
-.user-vault-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  padding: 0;
-}
-
-.user-vault-action-btn:hover {
-  background: var(--bg-surface);
-  border-color: var(--border-default);
-  color: var(--text-primary);
-}
-
-.user-vault-action-btn.edit:hover {
+.user-vault-item-check {
   color: var(--accent-teal);
-  border-color: var(--accent-teal);
+  margin-right: 0.2rem;
+  flex-shrink: 0;
 }
 
-.user-vault-action-btn.delete:hover {
-  color: var(--accent-red);
-  border-color: var(--accent-red);
+button.user-vault-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+button.user-vault-action-btn:hover {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+}
+
+button.user-vault-action-btn.edit:hover {
+  color: var(--accent-teal) !important;
+  border-color: var(--accent-teal) !important;
+}
+
+button.user-vault-action-btn.delete:hover {
+  color: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
 }
 
 .user-vault-item-info {

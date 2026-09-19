@@ -1726,17 +1726,15 @@
     const html = vaults.map(v => {
       const isActive = v.id === activeId;
       return `
-        <div class="user-vault-row ${isActive ? 'active' : ''}">
-          <button type="button" class="user-vault-select-btn" data-switch-vault-id="${v.id}" title="Switch to ${escapeHTML(v.name)}">
-            <div class="user-vault-item-info">
-              <div class="user-vault-item-name">${escapeHTML(v.name)}</div>
-              ${v.tagline ? `<div class="user-vault-item-tag">${escapeHTML(v.tagline)}</div>` : ''}
-            </div>
+        <div class="user-vault-item ${isActive ? 'active' : ''}" data-switch-vault-id="${v.id}" role="button" tabindex="0" title="Switch to ${escapeHTML(v.name)}">
+          <div class="user-vault-item-info">
+            <div class="user-vault-item-name">${escapeHTML(v.name)}</div>
+            ${v.tagline ? `<div class="user-vault-item-tag">${escapeHTML(v.tagline)}</div>` : ''}
+          </div>
+          <div class="user-vault-item-actions">
             ${isActive ? `
               <svg class="user-vault-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
             ` : ''}
-          </button>
-          <div class="user-vault-actions">
             <button type="button" class="user-vault-action-btn edit" data-edit-vault-id="${v.id}" title="Edit Vault Name & Tagline" aria-label="Edit ${escapeHTML(v.name)}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </button>
@@ -1753,11 +1751,13 @@
     if (el.userVaultsList) el.userVaultsList.innerHTML = html;
     if (el.mobileUserVaultsList) el.mobileUserVaultsList.innerHTML = html;
 
-    // Switch vault click handler
-    document.querySelectorAll('[data-switch-vault-id]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const targetId = btn.getAttribute('data-switch-vault-id');
+    // Switch vault click handler (clicking the row)
+    document.querySelectorAll('[data-switch-vault-id]').forEach(row => {
+      row.addEventListener('click', async (e) => {
+        if (e.target.closest('[data-edit-vault-id]') || e.target.closest('[data-delete-vault-id]')) {
+          return;
+        }
+        const targetId = row.getAttribute('data-switch-vault-id');
         if (targetId && window.componentStore) {
           await window.componentStore.switchVault(targetId);
           const active = window.componentStore.getActiveVault();
