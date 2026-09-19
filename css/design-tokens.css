@@ -43,7 +43,7 @@
 }
 
 /* =========================================================================
-   LIGHT MODE: SIH AQUADOT COASTAL (Marine Navy, Ocean Teal, Warm Amber & Slate)
+   LIGHT MODE: SIH COASTAL MARINE (Deep Marine Navy #1B3A4B & Sapphire Blue #2563EB)
    ========================================================================= */
 [data-theme="light"] {
   --bg-app: #F5F8FA;
@@ -53,14 +53,14 @@
   --bg-surface-active: #E3EBEF;
   --bg-input: #ffffff;
   --bg-glass: rgba(245, 248, 250, 0.92);
-  --bg-pinstripe: rgba(41, 118, 133, 0.08);
+  --bg-pinstripe: rgba(37, 99, 235, 0.05);
 
   /* Hairline & Coastal Slate Borders */
   --border-subtle: rgba(175, 188, 197, 0.40);
   --border-default: #CBD5E1;
   --border-highlight: #AFBCC5;
-  --border-focus: #297685;
-  --border-accent: rgba(41, 118, 133, 0.40);
+  --border-focus: #2563EB;
+  --border-accent: rgba(37, 99, 235, 0.35);
 
   /* Typography Colors - WCAG AA & AAA Verified */
   --text-primary: #1B3A4B;       /* Deep Coastal Marine Navy */
@@ -68,19 +68,24 @@
   --text-muted: #5C7280;         /* Contrast ratio >= 4.8:1 on #F5F8FA & #fff */
   --text-inverse: #ffffff;
 
-  /* Functional Accents - SIH Aquadot Marine Ocean Teal & Warm Amber */
-  --accent-primary: #297685;
-  --accent-primary-hover: #1e5b66;
+  /* Functional Accents - True Sapphire Blue (No Greenish-Teal) */
+  --accent-primary: #2563EB;
+  --accent-primary-hover: #1D4ED8;
   --accent-primary-text: #ffffff;
 
   --accent-brass: #F29F5A;
   --accent-brass-bg: rgba(242, 159, 90, 0.14);
   --accent-brass-border: rgba(242, 159, 90, 0.42);
 
-  --accent-teal: #226D7B;
-  --accent-teal-bg: rgba(34, 109, 123, 0.12);
-  --accent-teal-border: rgba(34, 109, 123, 0.35);
-  --accent-teal-glow: rgba(34, 109, 123, 0.22);
+  --accent-teal: #2563EB;        /* True Blue replacement for legacy teal */
+  --accent-teal-bg: rgba(37, 99, 235, 0.09);
+  --accent-teal-border: rgba(37, 99, 235, 0.30);
+  --accent-teal-glow: rgba(37, 99, 235, 0.20);
+
+  --accent-blue: #2563EB;
+  --accent-blue-bg: rgba(37, 99, 235, 0.09);
+  --accent-blue-border: rgba(37, 99, 235, 0.30);
+  --accent-blue-glow: rgba(37, 99, 235, 0.20);
 
   --accent-gold: #F29F5A;
 
@@ -88,7 +93,7 @@
   --accent-red-bg: rgba(217, 83, 79, 0.12);
   --accent-red-border: rgba(217, 83, 79, 0.35);
 
-  --card-media-bg: linear-gradient(135deg, #F0F6F8 0%, #E3EBEF 100%);
+  --card-media-bg: linear-gradient(135deg, #F0F4F8 0%, #E2E8F0 100%);
   --moderne-chrome-light: #CBD5E1;
   --moderne-steel: #5C7280;
 
@@ -98,48 +103,53 @@
 }
 
 /* =========================================================================
-   DARK MODE: PURE BLACK ICON METALLIC NOIR
-   Extracted directly from assets/black-icon.svg:
-   - Pitch Black (#000000) & Deep Charcoal Obsidian (#0c0c0e, #141416)
-   - Brushed Metallic Chrome & Polished Silver (#ffffff, #e2e8f0, #cbd5e1, #94a3b8)
-   - High-Contrast Precision Chrome Accents
+   DARK MODE: MIDNIGHT SAPPHIRE NOIR
+   Matches Light Mode with True Electric Sapphire Blue (#3B82F6 & #1D4ED8)
+   - Zero greenish-teal tint: True Royal Sapphire Blue
+   - Deep Midnight Obsidian & Slate Navy (#080C14, #0E1524, #131D31)
+   - High-Contrast WCAG AA / AAA Accessibility
    ========================================================================= */
 [data-theme="dark"] {
-  --bg-app: #000000;             /* Pitch Black from black-icon.svg */
-  --bg-subtle: #0c0c0e;          /* Deep Charcoal Obsidian Panel */
-  --bg-surface: #141416;         /* Polished Obsidian Hardware Vault Surface */
-  --bg-surface-hover: #1e1e22;   /* Elevated Charcoal Surface Hover */
-  --bg-surface-active: #27272c;
-  --bg-input: #08080a;           /* Recessed Black Input Background */
-  --bg-glass: rgba(8, 8, 10, 0.96);
-  --bg-pinstripe: rgba(255, 255, 255, 0.03);
+  --bg-app: #080C14;             /* Deep Midnight Marine Black */
+  --bg-subtle: #0E1524;          /* Deep Marine Slate Subsurface */
+  --bg-surface: #131D31;         /* Rich Marine Slate Surface for cards, dropdowns, modals */
+  --bg-surface-hover: #1A2742;   /* Elevated Marine Slate Hover */
+  --bg-surface-active: #223356;
+  --bg-input: #0A101D;           /* Recessed Deep Input Background */
+  --bg-glass: rgba(14, 21, 36, 0.94);
+  --bg-pinstripe: rgba(59, 130, 246, 0.04);
 
-  /* Brushed Chrome & Silver Metallic Borders */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-default: rgba(255, 255, 255, 0.15); /* Polished silver hairline */
-  --border-highlight: rgba(255, 255, 255, 0.30);
-  --border-focus: #ffffff;                      /* Crisp Chrome Focus Ring */
-  --border-accent: rgba(255, 255, 255, 0.45);
+  /* Precise Sapphire Metallic Borders */
+  --border-subtle: rgba(96, 165, 250, 0.12);
+  --border-default: rgba(148, 163, 184, 0.22);
+  --border-highlight: rgba(96, 165, 250, 0.35);
+  --border-focus: #3B82F6;                      /* Crisp True Blue Focus Ring */
+  --border-accent: rgba(59, 130, 246, 0.45);
 
   /* Typography Colors - High-Contrast WCAG AAA */
-  --text-primary: #ffffff;       /* Pure Chrome White */
-  --text-secondary: #e2e8f0;     /* Polished Silver Chrome */
-  --text-muted: #94a3b8;         /* Brushed Steel (Contrast >= 7.5:1 on #141416) */
-  --text-inverse: #000000;
+  --text-primary: #ffffff;       /* Pure Crisp White */
+  --text-secondary: #CBD5E1;     /* Slate Silver */
+  --text-muted: #8FA2B8;         /* High Contrast (>= 5.2:1 against #131D31) */
+  --text-inverse: #080C14;
 
-  /* Functional Accents - Brushed Chrome & High-Contrast Metallics */
-  --accent-primary: #ffffff;
-  --accent-primary-hover: #e2e8f0;
-  --accent-primary-text: #000000;
+  /* Functional Accents - True Electric Sapphire Blue (No Greenish Teal) */
+  --accent-primary: #3B82F6;
+  --accent-primary-hover: #2563EB;
+  --accent-primary-text: #ffffff;
 
   --accent-brass: #F29F5A;
   --accent-brass-bg: rgba(242, 159, 90, 0.16);
   --accent-brass-border: rgba(242, 159, 90, 0.45);
 
-  --accent-teal: #e2e8f0;
-  --accent-teal-bg: rgba(255, 255, 255, 0.08);
-  --accent-teal-border: rgba(255, 255, 255, 0.22);
-  --accent-teal-glow: rgba(255, 255, 255, 0.20);
+  --accent-teal: #3B82F6;        /* True Sapphire Blue replacement for legacy teal */
+  --accent-teal-bg: rgba(59, 130, 246, 0.15);
+  --accent-teal-border: rgba(59, 130, 246, 0.38);
+  --accent-teal-glow: rgba(59, 130, 246, 0.28);
+
+  --accent-blue: #3B82F6;
+  --accent-blue-bg: rgba(59, 130, 246, 0.15);
+  --accent-blue-border: rgba(59, 130, 246, 0.38);
+  --accent-blue-glow: rgba(59, 130, 246, 0.28);
 
   --accent-gold: #F29F5A;
 
@@ -147,13 +157,13 @@
   --accent-red-bg: rgba(255, 82, 82, 0.16);
   --accent-red-border: rgba(255, 82, 82, 0.42);
 
-  --card-media-bg: linear-gradient(135deg, #050505 0%, #161618 100%);
-  --moderne-chrome-light: #ffffff;
-  --moderne-steel: #94a3b8;
+  --card-media-bg: linear-gradient(135deg, #0A101D 0%, #131D31 100%);
+  --moderne-chrome-light: #94A3B8;
+  --moderne-steel: #8FA2B8;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.70);
-  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.85);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.95);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.50);
+  --shadow-md: 0 6px 22px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.85);
 }
 
 /* Accessibility Focus Indicator (WCAG 2.1 AA Success Criterion 2.4.7) */

@@ -1411,8 +1411,8 @@
       doc.setFillColor(7, 10, 14);
       doc.rect(0, 0, pageWidth, 62, 'F');
 
-      // Aerodynamic Streamline Cyan Accent Bar (#00B4D8)
-      doc.setFillColor(0, 180, 216);
+      // Aerodynamic Streamline Sapphire Accent Bar (#2563EB)
+      doc.setFillColor(37, 99, 235);
       doc.rect(0, 62, pageWidth, 2.5, 'F');
 
       // Title & Branding
@@ -1422,7 +1422,7 @@
       doc.text('COMPONENT VAULT  |  HARDWARE LAB CUSTODY LEDGER', 36, 28);
 
       // Subtitle / Vault Name
-      doc.setTextColor(0, 180, 216);
+      doc.setTextColor(37, 99, 235);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10.5);
       const vaultTitle = `${(vault.name || 'Hardware Lab').toUpperCase()}${vault.tagline ? ' — ' + vault.tagline : ''}`;
@@ -1551,7 +1551,7 @@
                 data.cell.styles.textColor = [217, 138, 40];
                 data.cell.styles.fontStyle = 'bold';
               } else if (val === 'IN STOCK') {
-                data.cell.styles.textColor = [41, 118, 133];
+                data.cell.styles.textColor = [37, 99, 235];
                 data.cell.styles.fontStyle = 'bold';
               }
             }
@@ -1619,7 +1619,7 @@
   <title>Component Vault Audit Report - ${vault.name}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 24px; color: #0f172a; }
-    .header { background: #070a0e; color: #fff; padding: 18px 24px; border-radius: 8px; margin-bottom: 20px; border-bottom: 3px solid #00B4D8; }
+    .header { background: #070a0e; color: #fff; padding: 18px 24px; border-radius: 8px; margin-bottom: 20px; border-bottom: 3px solid #2563EB; }
     .header h1 { margin: 0 0 6px 0; font-size: 1.25rem; letter-spacing: 0.08em; text-transform: uppercase; }
     .header .meta { font-size: 0.82rem; color: #94a3b8; display: flex; justify-content: space-between; }
     .kpis { display: flex; gap: 12px; margin-bottom: 20px; }
@@ -1632,7 +1632,7 @@
     tr:nth-child(even) td { background: #f8fafc; }
     .text-center { text-align: center; }
     .dead-val { color: #dc2626; font-weight: bold; }
-    .status-in { color: #0d9488; font-weight: 600; }
+    .status-in { color: #2563EB; font-weight: 600; }
     .status-low { color: #d97706; font-weight: 600; }
     .status-dep { color: #dc2626; font-weight: 600; }
     @media print {
@@ -1643,7 +1643,7 @@
 </head>
 <body>
   <div class="no-print" style="margin-bottom: 16px; display: flex; gap: 8px;">
-    <button onclick="window.print()" style="padding: 8px 16px; background: #00B4D8; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Print / Save as PDF</button>
+    <button onclick="window.print()" style="padding: 8px 16px; background: #2563EB; color: #ffffff; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Print / Save as PDF</button>
     <button onclick="window.close()" style="padding: 8px 16px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Close</button>
   </div>
   <div class="header">
@@ -1656,7 +1656,7 @@
   <div class="kpis">
     <div class="kpi-card"><div class="kpi-val">${totalModels}</div><div class="kpi-lbl">Component Models</div></div>
     <div class="kpi-card"><div class="kpi-val">${totalUnits}</div><div class="kpi-lbl">Total Physical Units</div></div>
-    <div class="kpi-card"><div class="kpi-val" style="color: #0d9488;">${availUnits}</div><div class="kpi-lbl">Available Stock</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color: #2563EB;">${availUnits}</div><div class="kpi-lbl">Available Stock</div></div>
     <div class="kpi-card"><div class="kpi-val" style="color: #d97706;">${lentUnits}</div><div class="kpi-lbl">In Active Projects</div></div>
     <div class="kpi-card"><div class="kpi-val" style="color: #dc2626;">${deadUnits}</div><div class="kpi-lbl">Dead / Defective</div></div>
   </div>
