@@ -4,6 +4,7 @@
   "description": "Streamline Moderne hardware component inventory, custody tracker, and project manager",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'Static assets ready'",
     "start": "node server.js",
     "cap:android": "npx cap add android && npx cap open android",
     "cap:sync": "npx cap sync",
