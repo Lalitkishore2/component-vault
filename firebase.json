@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "component-core",
     "public": ".",
     "ignore": [
       "firebase.json",
