@@ -248,46 +248,141 @@
     applyTheme(state.theme === 'dark' ? 'light' : 'dark');
   }
 
-  // --- Modal Helpers ---
-  function openModal(modal) {
+  // --- Accessibility, Focus Management & History Navigation ---
+  let lastFocusedElement = null;
+
+  function modalIdToHash(modalId) {
+    const map = {
+      componentModal: 'add-component',
+      lendModal: 'lend-component',
+      lightboxModal: 'lightbox',
+      backupModal: 'backup',
+      createVaultModal: 'create-vault',
+      editVaultModal: 'edit-vault',
+      cloudConfigModal: 'cloud-db',
+      iosInstallModal: 'pwa-install',
+      labFaqModal: 'faq'
+    };
+    return map[modalId] || modalId;
+  }
+
+  function tabToHash(tab) {
+    const map = {
+      inventory: 'inventory',
+      borrowers: 'projects',
+      activity: 'activity'
+    };
+    return map[tab] || tab;
+  }
+
+  function trapFocus(modal) {
+    const focusable = modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    modal.onkeydown = function(e) {
+      if (e.key === 'Tab') {
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    setTimeout(() => {
+      const initialInput = modal.querySelector('input:not([type="hidden"]), select, textarea, button.btn-primary');
+      if (initialInput && typeof initialInput.focus === 'function') {
+        initialInput.focus();
+      } else if (first && typeof first.focus === 'function') {
+        first.focus();
+      }
+    }, 60);
+  }
+
+  // --- Modal Helpers with History Navigation ---
+  function openModal(modal, pushHistory = true) {
     if (!modal) return;
+    lastFocusedElement = document.activeElement;
     modal.classList.add('open');
     modal.style.display = 'flex';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-  }
 
-  function closeModal(modal) {
-    if (!modal) return;
-    modal.classList.remove('open');
-    modal.style.display = 'none';
-    if (!document.querySelector('.modal-backdrop.open')) {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
+    trapFocus(modal);
+
+    if (pushHistory) {
+      const hash = '#' + modalIdToHash(modal.id);
+      history.pushState({ type: 'modal', id: modal.id }, '', hash);
     }
   }
 
-  function openMobileMenu() {
+  function closeModal(modal, shouldPopHistory = true) {
+    if (!modal) return;
+    const wasOpen = modal.classList.contains('open') || modal.style.display === 'flex';
+    modal.classList.remove('open');
+    modal.style.display = 'none';
+    modal.onkeydown = null;
+
+    if (!document.querySelector('.modal-backdrop.open') && (!el.mobileVaultMenu || el.mobileVaultMenu.style.display !== 'flex')) {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      try { lastFocusedElement.focus(); } catch (err) {}
+      lastFocusedElement = null;
+    }
+
+    if (shouldPopHistory && wasOpen && history.state && history.state.type === 'modal' && history.state.id === modal.id) {
+      history.back();
+    }
+  }
+
+  function openMobileMenu(pushHistory = true) {
     if (!el.mobileVaultMenu) return;
+    lastFocusedElement = document.activeElement;
     renderVaultDropdown();
     el.mobileVaultMenu.style.display = 'flex';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+
+    if (pushHistory) {
+      history.pushState({ type: 'menu' }, '', '#vault-menu');
+    }
   }
 
-  function closeMobileMenu() {
+  function closeMobileMenu(shouldPopHistory = true) {
     if (!el.mobileVaultMenu) return;
+    const wasOpen = el.mobileVaultMenu.style.display === 'flex';
     el.mobileVaultMenu.style.display = 'none';
+
     if (!document.querySelector('.modal-backdrop.open')) {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+    }
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      try { lastFocusedElement.focus(); } catch (err) {}
+      lastFocusedElement = null;
+    }
+
+    if (shouldPopHistory && wasOpen && history.state && history.state.type === 'menu') {
+      history.back();
     }
   }
 
   function setupModalDismiss() {
     document.querySelectorAll('.modal-backdrop').forEach(modal => {
       modal.addEventListener('click', e => {
-        if (e.target === modal) closeModal(modal);
+        if (e.target === modal) closeModal(modal, true);
       });
     });
 
@@ -295,19 +390,111 @@
       btn.addEventListener('click', () => {
         const targetId = btn.getAttribute('data-close-modal');
         const modal = document.getElementById(targetId);
-        if (modal) closeModal(modal);
+        if (modal) closeModal(modal, true);
       });
     });
 
+    // Escape Key: Universally closes any active modal, mobile menu, user dropdown, or filter popover
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-backdrop.open').forEach(closeModal);
+        // 1. Close any open modals
+        const openModals = document.querySelectorAll('.modal-backdrop.open');
+        if (openModals.length > 0) {
+          e.preventDefault();
+          openModals.forEach(m => closeModal(m, true));
+          return;
+        }
+
+        // 2. Close mobile menu drawer
+        if (el.mobileVaultMenu && el.mobileVaultMenu.style.display === 'flex') {
+          e.preventDefault();
+          closeMobileMenu(true);
+          return;
+        }
+
+        // 3. Close user dropdown menu
+        if (el.userDropdownMenu && el.userDropdownMenu.style.display === 'block') {
+          e.preventDefault();
+          closeUserMenu();
+          return;
+        }
+
+        // 4. Close filter popover
+        if (el.filterPopover && el.filterPopover.classList.contains('open')) {
+          e.preventDefault();
+          toggleFilterPopover(false);
+          return;
+        }
+
+        // 5. Search input clear / blur
+        if (document.activeElement === el.topSearchInput || document.activeElement === el.searchInput) {
+          if (document.activeElement.value) {
+            document.activeElement.value = '';
+            state.searchQuery = '';
+            renderCurrentView();
+          } else {
+            document.activeElement.blur();
+          }
+        }
+      }
+    });
+
+    // Browser Back/Forward, Trackpad 2-finger Swipe & Mobile Back Navigation
+    window.addEventListener('popstate', e => {
+      // 1. If any modal is currently open, close it (prevents navigating away from the app!)
+      const openModals = document.querySelectorAll('.modal-backdrop.open');
+      if (openModals.length > 0) {
+        openModals.forEach(m => closeModal(m, false));
+        return;
+      }
+
+      // 2. If mobile menu drawer is open, close it
+      if (el.mobileVaultMenu && el.mobileVaultMenu.style.display === 'flex') {
+        closeMobileMenu(false);
+        return;
+      }
+
+      // 3. If user dropdown menu is open, close it
+      if (el.userDropdownMenu && el.userDropdownMenu.style.display === 'block') {
+        closeUserMenu();
+        return;
+      }
+
+      // 4. Handle forward modal navigation
+      if (e.state && e.state.type === 'modal' && e.state.id) {
+        const targetModal = document.getElementById(e.state.id);
+        if (targetModal) {
+          openModal(targetModal, false);
+          return;
+        }
+      }
+
+      // 5. Handle forward mobile menu navigation
+      if (e.state && e.state.type === 'menu') {
+        openMobileMenu(false);
+        return;
+      }
+
+      // 6. Handle tab navigation (backward or forward)
+      if (e.state && e.state.type === 'tab' && e.state.tab) {
+        setTab(e.state.tab, false);
+        return;
+      }
+
+      // 7. Fallback to hash
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'projects' || hash === 'borrowers') {
+        setTab('borrowers', false);
+      } else if (hash === 'activity' || hash === 'log') {
+        setTab('activity', false);
+      } else if (hash === 'inventory' || !hash) {
+        setTab('inventory', false);
       }
     });
   }
 
   // --- View Mode & Navigation ---
-  function setTab(tab) {
+  function setTab(tab, pushHistory = true) {
     state.currentTab = tab;
     el.tabInventory.classList.toggle('active', tab === 'inventory');
     el.tabBorrowers.classList.toggle('active', tab === 'borrowers');
@@ -323,6 +510,13 @@
     el.activityViewWrapper.style.display = tab === 'activity' ? 'block' : 'none';
 
     renderCurrentView();
+
+    if (pushHistory) {
+      const hash = '#' + tabToHash(tab);
+      if (window.location.hash !== hash) {
+        history.pushState({ type: 'tab', tab: tab }, '', hash);
+      }
+    }
   }
 
   function setSubviewMode(mode) {
@@ -2517,6 +2711,15 @@
   async function init() {
     applyTheme(state.theme);
     setViewMode(state.viewMode);
+
+    // Initialize History state for root page load
+    if (!history.state) {
+      const initialHash = window.location.hash.replace('#', '');
+      let initialTab = 'inventory';
+      if (initialHash === 'projects' || initialHash === 'borrowers') initialTab = 'borrowers';
+      else if (initialHash === 'activity' || initialHash === 'log') initialTab = 'activity';
+      history.replaceState({ type: 'tab', tab: initialTab }, '', '#' + tabToHash(initialTab));
+    }
 
     // Initialize Cloud DB before checking authentication
     if (window.cloudDb && typeof window.cloudDb.whenReady === 'function') {
