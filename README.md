@@ -1,4 +1,4 @@
-# ⚡ Component Vault & Custody Tracker (Streamline Moderne Edition)
+#  Component Vault & Custody Tracker (Streamline Moderne Edition)
 
 > **Aerodynamic Hardware Inventory, Project Bill-of-Materials Allocation & Custody Tracker** inspired by 1930s Streamline Moderne industrial design and Midnight Moderne Noir.
 
@@ -6,7 +6,7 @@ Built with **vanilla semantic HTML5, CSS3 design tokens, and reactive JavaScript
 
 ---
 
-## 🌟 Key Highlights
+##  Key Highlights
 
 - **Universal Multi-User Login & Isolated Vaults**:
   - Anyone can clone this repository or host it publicly.
@@ -47,7 +47,7 @@ Built with **vanilla semantic HTML5, CSS3 design tokens, and reactive JavaScript
 
 ---
 
-## 📖 Complete Setup Guides
+##  Complete Setup Guides
 
 * **[DEPLOYMENT_GUIDE.md](file:///c:/Users/LALITKO/Desktop/projects/component-inventory/DEPLOYMENT_GUIDE.md)**: **100% Free Backend, Hosting & Mobile App Setup Tutorial**
   - How to set up Google Firebase Spark Free tier (Auth + Firestore + Security Rules).
@@ -96,7 +96,7 @@ If you want to sync your private inventory across multiple devices using your ow
 
 ---
 
-## 🚀 Instant Hosting & Deployment
+##  Instant Hosting & Deployment
 
 Because the application is built entirely with client-side persistence and native Web Crypto hashing, it runs **out of the box anywhere**:
 
@@ -120,7 +120,7 @@ Because the application is built entirely with client-side persistence and nativ
 
 ---
 
-## 🔑 Google Sign-In & Cloud Database Setup (Your Own Firebase)
+##  Google Sign-In & Cloud Database Setup (Your Own Firebase)
 
 When you deploy Component Vault to a public URL (e.g. **GitHub Pages**, **Vercel**, **Netlify**, or your own domain), you can enable **1-Click Google Sign-In** and **Cloud Firestore Database Sync** across all your devices:
 
@@ -162,7 +162,7 @@ Once configured:
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 ├── index.html            # Main UI, modals, layouts, and semantic markup
@@ -181,7 +181,7 @@ Once configured:
 
 ---
 
-## 🔒 Security & Privacy Notice
+##  Security & Privacy Notice
 - Passwords are automatically hashed in the client using `SHA-256` via `crypto.subtle`.
 - All data resides securely in the user's browser storage (`localStorage`) scoped to their user ID (`CV_VAULT_DATA_<userId>`).
 - To backup or migrate your inventory to another device, use the built-in **Backup > Download JSON Backup** button.
