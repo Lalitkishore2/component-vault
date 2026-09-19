@@ -1,5 +1,5 @@
 // Component Vault Service Worker - Offline PWA Cache
-const CACHE_NAME = 'component-vault-v1.3';
+const CACHE_NAME = 'component-vault-v1.4';
 const CORE_ASSETS = [
   './',
   './index.html',

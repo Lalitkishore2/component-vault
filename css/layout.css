@@ -924,9 +924,9 @@ h1, h2, h3, h4 {
   gap: 0.45rem;
   padding: 0.5rem 1.25rem;
   min-height: 44px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #297685 0%, #1B3A4B 100%);
   color: #ffffff !important;
-  border: 1px solid #10b981;
+  border: 1px solid #297685;
   border-radius: var(--radius-full);
   font-family: var(--font-display);
   font-size: 0.82rem;
@@ -937,14 +937,14 @@ h1, h2, h3, h4 {
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.32);
+  box-shadow: 0 4px 14px rgba(41, 118, 133, 0.32);
 }
 
 .toolbar-add-btn:hover {
-  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
-  border-color: #34d399;
+  background: linear-gradient(135deg, #3895a7 0%, #205e6b 100%);
+  border-color: #64B5C1;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.48);
+  box-shadow: 0 6px 20px rgba(41, 118, 133, 0.48);
 }
 
 .toolbar-add-btn svg {
