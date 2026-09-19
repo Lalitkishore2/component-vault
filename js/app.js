@@ -129,6 +129,12 @@
     headerUserAvatar: document.getElementById('headerUserAvatar'),
     headerUserName: document.getElementById('headerUserName'),
     headerActiveVaultBadge: document.getElementById('headerActiveVaultBadge'),
+    headerCloudSyncBadge: document.getElementById('headerCloudSyncBadge'),
+    headerSyncDot: document.getElementById('headerSyncDot'),
+    headerSyncText: document.getElementById('headerSyncText'),
+    swUpdateBanner: document.getElementById('swUpdateBanner'),
+    swUpdateReloadBtn: document.getElementById('swUpdateReloadBtn'),
+    swUpdateDismissBtn: document.getElementById('swUpdateDismissBtn'),
     userDropdownMenu: document.getElementById('userDropdownMenu'),
     userMenuDisplayName: document.getElementById('userMenuDisplayName'),
     userMenuUsername: document.getElementById('userMenuUsername'),
@@ -1170,10 +1176,51 @@
   }
 
 
+  // Client-side image compression utility using HTML5 Canvas (keeps payloads < 100KB for Firestore)
+  function compressImage(imgSource, maxWidth = 640, maxHeight = 640, quality = 0.78) {
+    return new Promise((resolve) => {
+      if (!imgSource) return resolve('');
+      if (imgSource.startsWith('http') || imgSource.startsWith('data:image/svg')) {
+        return resolve(imgSource);
+      }
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let compressed = canvas.toDataURL('image/webp', quality);
+        if (!compressed.startsWith('data:image/webp')) {
+          compressed = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(compressed.length < imgSource.length ? compressed : imgSource);
+      };
+      img.onerror = () => resolve(imgSource);
+      img.src = imgSource;
+    });
+  }
+
   function handleImageFile(file) {
     const reader = new FileReader();
-    reader.onload = ev => {
-      setImagePreviewState(ev.target.result);
+    reader.onload = async ev => {
+      const raw = ev.target.result;
+      const compressed = await compressImage(raw, 640, 640, 0.78);
+      setImagePreviewState(compressed);
     };
     reader.readAsDataURL(file);
   }
@@ -1495,8 +1542,12 @@
     el.openNewComponentBtn.addEventListener('click', openNewComponentModal);
 
     // Save Component Form
-    el.componentForm.addEventListener('submit', e => {
+    el.componentForm.addEventListener('submit', async e => {
       e.preventDefault();
+      let finalImage = state.pendingImageBase64;
+      if (finalImage && finalImage.startsWith('data:image') && finalImage.length > 80000) {
+        finalImage = await compressImage(finalImage, 640, 640, 0.78);
+      }
       const payload = {
         name: el.compName.value,
         sku: el.compSku.value,
@@ -1505,7 +1556,7 @@
         totalQty: el.compTotalQty.value,
         specs: el.compSpecs.value,
         tags: el.compTags.value,
-        image: state.pendingImageBase64
+        image: finalImage
       };
 
       if (state.editingComponentId) {
@@ -1572,6 +1623,26 @@
     window.componentStore.subscribe(() => {
       renderAll();
     });
+
+    // Cloud Sync Status Listener & Manual Sync Trigger
+    if (window.componentStore) {
+      window.componentStore.onSyncStatusChange = (status, msg) => {
+        updateSyncBadgeUI(status, msg);
+      };
+      updateSyncBadgeUI(window.componentStore.syncStatus, window.componentStore.syncError);
+    }
+
+    if (el.headerCloudSyncBadge) {
+      el.headerCloudSyncBadge.addEventListener('click', async () => {
+        showToast('Initiating cloud sync...');
+        const ok = await window.componentStore.syncToCloudNow();
+        if (ok) {
+          showToast('☁️ Vault successfully synced to Cloud Firestore!');
+        } else {
+          showToast('⚠️ Sync issue: ' + (window.componentStore.syncError || 'Check Firebase Auth or permissions'));
+        }
+      });
+    }
   }
 
   // --- User Profile & Authentication Handlers ---
@@ -2205,6 +2276,58 @@
           localStorage.setItem('vault_storage_notice_ack', 'true');
         });
       }
+    }
+
+    // 6. Service Worker Update Notification
+    setupServiceWorkerUpdates();
+  }
+
+  function updateSyncBadgeUI(status, msg) {
+    if (!el.headerSyncDot || !el.headerSyncText) return;
+    el.headerSyncDot.className = 'sync-indicator-dot ' + (status || 'synced');
+    if (status === 'syncing') {
+      el.headerSyncText.textContent = 'Syncing...';
+      if (el.headerCloudSyncBadge) el.headerCloudSyncBadge.title = 'Syncing changes to Cloud Firestore...';
+    } else if (status === 'error') {
+      el.headerSyncText.textContent = 'Sync Error';
+      if (el.headerCloudSyncBadge) el.headerCloudSyncBadge.title = `Cloud sync issue: ${msg || 'Check Firebase Auth'}. Click to retry.`;
+    } else if (status === 'offline') {
+      el.headerSyncText.textContent = 'Local Only';
+      if (el.headerCloudSyncBadge) el.headerCloudSyncBadge.title = 'Running locally. Configure Cloud DB in settings to sync.';
+    } else {
+      el.headerSyncText.textContent = 'Synced';
+      if (el.headerCloudSyncBadge) el.headerCloudSyncBadge.title = 'Cloud Database: All components safely synced. Click to force sync.';
+    }
+  }
+
+  function setupServiceWorkerUpdates() {
+    if (el.swUpdateReloadBtn) {
+      el.swUpdateReloadBtn.addEventListener('click', () => {
+        window.location.reload();
+      });
+    }
+
+    if (el.swUpdateDismissBtn) {
+      el.swUpdateDismissBtn.addEventListener('click', () => {
+        if (el.swUpdateBanner) el.swUpdateBanner.style.display = 'none';
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const installingWorker = reg.installing;
+          if (installingWorker) {
+            installingWorker.addEventListener('statechange', () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (el.swUpdateBanner) {
+                  el.swUpdateBanner.style.display = 'flex';
+                }
+              }
+            });
+          }
+        });
+      }).catch(() => {});
     }
   }
 

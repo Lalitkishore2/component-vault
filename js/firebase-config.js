@@ -179,6 +179,11 @@
         return true;
       } catch (err) {
         console.warn('Firestore write error:', err);
+        if (err && err.code === 'invalid-argument') {
+          console.error('[CloudDb] Document exceeds Firestore limit (1MB max per document). Ensure images are compressed.');
+        } else if (err && err.code === 'permission-denied') {
+          console.error('[CloudDb] Permission denied. Verify you are signed in with an authorized Google account.');
+        }
         return false;
       }
     }

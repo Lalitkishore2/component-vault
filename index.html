@@ -34,6 +34,18 @@
 </head>
 <body>
 
+  <!-- Service Worker Update Available Notification Banner -->
+  <div id="swUpdateBanner" class="sw-update-banner" style="display: none;" role="alert">
+    <div class="sw-update-content">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      <span>A new version of Component Vault is ready.</span>
+    </div>
+    <div class="sw-update-actions">
+      <button type="button" id="swUpdateReloadBtn" class="btn btn-primary btn-sm">Update Now</button>
+      <button type="button" id="swUpdateDismissBtn" class="btn-text-action" style="font-size: 0.72rem; color: var(--text-muted);">Later</button>
+    </div>
+  </div>
+
   <!-- Top Scroll Progress Bar (UI/UX Essential) -->
   <div id="scrollProgressBar" class="scroll-progress-bar" role="progressbar" aria-label="Page scroll progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 
@@ -180,7 +192,12 @@
 
         <!-- Desktop-Only Action Buttons (Account, Theme, Backup, Add) -->
         <div class="header-actions desktop-only-actions">
-          <!-- User Profile Chip & Vault Menu -->
+          <!-- Cloud Sync Status Pill -->
+          <div id="headerCloudSyncBadge" class="cloud-sync-pill" title="Cloud Database: Real-time Sync Status (Click to Sync Now)" role="button" tabindex="0">
+            <span class="sync-indicator-dot synced" id="headerSyncDot"></span>
+            <span class="sync-status-text" id="headerSyncText">Synced</span>
+          </div>
+
           <!-- User Profile Chip & Vault Menu -->
           <div class="user-profile-wrapper" id="userProfileWrapper">
             <button id="userProfileBtn" class="btn btn-secondary btn-sm user-profile-btn" aria-haspopup="true" aria-expanded="false" title="Active Vault Account">

@@ -278,6 +278,108 @@ h1, h2, h3, h4 {
   border-color: var(--accent-teal-border);
 }
 
+/* Cloud Sync Status Indicator */
+.cloud-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  line-height: 1;
+}
+
+.cloud-sync-pill:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
+}
+
+.sync-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  box-shadow: 0 0 6px var(--accent-teal);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sync-indicator-dot.syncing {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: pulseSync 0.9s infinite alternate;
+}
+
+.sync-indicator-dot.error {
+  background: var(--accent-red);
+  box-shadow: 0 0 8px var(--accent-red);
+}
+
+.sync-indicator-dot.offline {
+  background: var(--moderne-steel);
+  box-shadow: none;
+}
+
+@keyframes pulseSync {
+  from { opacity: 0.4; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+/* Service Worker Update Banner */
+.sw-update-banner {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: var(--bg-surface);
+  border: 1px solid var(--accent-teal-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-full);
+  padding: 0.45rem 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  animation: slideDownBanner 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+}
+
+@keyframes slideDownBanner {
+  from { transform: translate(-50%, -30px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.sw-update-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.sw-update-content svg {
+  color: var(--accent-teal);
+  flex-shrink: 0;
+}
+
+.sw-update-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
 /* Header Actions */
 .header-actions {
   display: flex;

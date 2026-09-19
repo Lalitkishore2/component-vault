@@ -7,6 +7,9 @@ class ComponentStore {
     this.activityLog = [];
     this.subscribers = [];
     this.syncChannel = null;
+    this.syncStatus = 'synced'; // 'synced' | 'syncing' | 'error' | 'offline'
+    this.syncError = null;
+    this.onSyncStatusChange = null;
     this.setupCrossTabSync();
     this.init();
   }
@@ -290,9 +293,59 @@ class ComponentStore {
       } else {
         this.resetToDefaults(false);
       }
+
+      // Auto-sync retry when coming back online
+      if (typeof window !== 'undefined' && !this._onlineListenerAttached) {
+        this._onlineListenerAttached = true;
+        window.addEventListener('online', () => {
+          console.log('[Store] Internet connection restored, syncing with Firestore...');
+          this.syncToCloudNow();
+        });
+      }
     } catch (e) {
       console.warn('Failed to load from localStorage, using default data:', e);
       this.resetToDefaults(false);
+    }
+  }
+
+  setSyncStatus(status, errorMsg = '') {
+    this.syncStatus = status;
+    this.syncError = errorMsg;
+    if (typeof this.onSyncStatusChange === 'function') {
+      try {
+        this.onSyncStatusChange(status, errorMsg);
+      } catch (err) {
+        console.error('Error in sync status listener:', err);
+      }
+    }
+  }
+
+  async syncToCloudNow() {
+    this.setSyncStatus('syncing');
+    try {
+      const vaultId = this.getActiveVaultId();
+      const firestoreDocId = `${this.userId}_${vaultId}`;
+      const payload = {
+        components: this.components,
+        activityLog: this.activityLog,
+        savedAt: new Date().toISOString()
+      };
+      if (window.cloudDb && typeof window.cloudDb.saveToFirestore === 'function') {
+        const ok = await window.cloudDb.saveToFirestore(firestoreDocId, payload);
+        if (ok) {
+          this.setSyncStatus('synced');
+          return true;
+        } else {
+          this.setSyncStatus('error', 'Cloud sync failed. Verify you are signed in with an authorized Google account.');
+          return false;
+        }
+      } else {
+        this.setSyncStatus('offline', 'Cloud database service not configured.');
+        return false;
+      }
+    } catch (err) {
+      this.setSyncStatus('error', err.message);
+      return false;
     }
   }
 
@@ -309,8 +362,16 @@ class ComponentStore {
       const vaultId = this.getActiveVaultId();
       const firestoreDocId = `${this.userId}_${vaultId}`;
       if (window.cloudDb && typeof window.cloudDb.saveToFirestore === 'function') {
-        window.cloudDb.saveToFirestore(firestoreDocId, payload).catch(err => {
+        this.setSyncStatus('syncing');
+        window.cloudDb.saveToFirestore(firestoreDocId, payload).then(ok => {
+          if (ok) {
+            this.setSyncStatus('synced');
+          } else {
+            this.setSyncStatus('error', 'Cloud sync failed. Verify permissions or document size.');
+          }
+        }).catch(err => {
           console.warn('Cloud sync background warning:', err);
+          this.setSyncStatus('error', err.message);
         });
       }
     } catch (e) {
