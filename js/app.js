@@ -204,6 +204,8 @@
     mobileMenuAvatar: document.getElementById('mobileMenuAvatar'),
     mobileMenuDisplayName: document.getElementById('mobileMenuDisplayName'),
     mobileMenuUsername: document.getElementById('mobileMenuUsername'),
+    mobileActiveVaultBadge: document.getElementById('mobileActiveVaultBadge'),
+    mobileUserVaultsList: document.getElementById('mobileUserVaultsList'),
     mobileSwitchVaultBtn: document.getElementById('mobileSwitchVaultBtn'),
     mobileNewVaultBtn: document.getElementById('mobileNewVaultBtn'),
     mobileSignOutBtn: document.getElementById('mobileSignOutBtn'),
@@ -261,6 +263,7 @@
 
   function openMobileMenu() {
     if (!el.mobileVaultMenu) return;
+    renderVaultDropdown();
     el.mobileVaultMenu.style.display = 'flex';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';

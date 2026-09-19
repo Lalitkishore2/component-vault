@@ -595,15 +595,94 @@ h1, h2, h3, h4 {
 
 .mobile-account-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.4rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
 }
 
 .mobile-account-actions .btn-sm {
-  padding: 0.42rem 0.3rem;
-  font-size: 0.72rem;
+  padding: 0.48rem 0.5rem;
+  font-size: 0.76rem;
   justify-content: center;
   line-height: 1;
+}
+
+/* Mobile Hardware Vaults Card Section */
+.mobile-vaults-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.mobile-vaults-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mobile-vaults-subtitle {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.mobile-vaults-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mobile-vaults-list .user-vault-item {
+  padding: 0.65rem 0.85rem !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: 50px;
+}
+
+.mobile-vaults-list .user-vault-item:hover,
+.mobile-vaults-list .user-vault-item:active {
+  border-color: var(--accent-teal-border) !important;
+  background: var(--bg-surface-hover) !important;
+}
+
+.mobile-vaults-list .user-vault-item.active {
+  border-color: var(--accent-teal) !important;
+  border-left: 3.5px solid var(--accent-teal) !important;
+  background: rgba(41, 118, 133, 0.12) !important;
+}
+
+.mobile-vaults-list button.user-vault-action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.mobile-vaults-list button.user-vault-action-btn:hover,
+.mobile-vaults-list button.user-vault-action-btn:active {
+  background: var(--bg-app) !important;
+  border-color: var(--border-default) !important;
+}
+
+.mobile-vaults-list button.user-vault-action-btn.edit:hover,
+.mobile-vaults-list button.user-vault-action-btn.edit:active {
+  color: var(--accent-teal) !important;
+  border-color: var(--accent-teal) !important;
+}
+
+.mobile-vaults-list button.user-vault-action-btn.delete:hover,
+.mobile-vaults-list button.user-vault-action-btn.delete:active {
+  color: var(--accent-red) !important;
+  border-color: var(--accent-red) !important;
 }
 
 .mobile-menu-items {
