@@ -16,7 +16,7 @@ COPY assets/ ./assets/
 COPY css/ ./css/
 COPY js/ ./js/
 COPY index.html 404.html server.js manifest.webmanifest sw.js ./
-COPY "black icon.svg" "white icon.svg" logo.svg ./
+COPY logo.svg ./
 
 # Expose server port
 EXPOSE 3000
