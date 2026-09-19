@@ -77,10 +77,10 @@
   --accent-brass-bg: rgba(242, 159, 90, 0.14);
   --accent-brass-border: rgba(242, 159, 90, 0.42);
 
-  --accent-teal: #297685;
-  --accent-teal-bg: rgba(41, 118, 133, 0.12);
-  --accent-teal-border: rgba(41, 118, 133, 0.32);
-  --accent-teal-glow: rgba(41, 118, 133, 0.22);
+  --accent-teal: #226D7B;
+  --accent-teal-bg: rgba(34, 109, 123, 0.12);
+  --accent-teal-border: rgba(34, 109, 123, 0.35);
+  --accent-teal-glow: rgba(34, 109, 123, 0.22);
 
   --accent-gold: #F29F5A;
 
@@ -108,14 +108,14 @@
   --bg-surface-active: #244757;
   --bg-input: #09161c;
   --bg-glass: rgba(15, 32, 41, 0.94);
-  --bg-pinstripe: rgba(78, 205, 196, 0.05);
+  --bg-pinstripe: rgba(0, 180, 216, 0.05);
 
   /* Hairline & Oceanic Teal Metallic Borders */
   --border-subtle: rgba(41, 118, 133, 0.25);
   --border-default: rgba(41, 118, 133, 0.40);
   --border-highlight: #2b4a5a;
-  --border-focus: #4ECDC4;
-  --border-accent: rgba(78, 205, 196, 0.45);
+  --border-focus: #00B4D8;
+  --border-accent: rgba(0, 180, 216, 0.45);
 
   /* Typography Colors - High-Contrast WCAG AA & AAA */
   --text-primary: #ffffff;
@@ -132,10 +132,10 @@
   --accent-brass-bg: rgba(242, 159, 90, 0.16);
   --accent-brass-border: rgba(242, 159, 90, 0.45);
 
-  --accent-teal: #4ECDC4;
-  --accent-teal-bg: rgba(78, 205, 196, 0.15);
-  --accent-teal-border: rgba(78, 205, 196, 0.38);
-  --accent-teal-glow: rgba(78, 205, 196, 0.25);
+  --accent-teal: #00B4D8;
+  --accent-teal-bg: rgba(0, 180, 216, 0.15);
+  --accent-teal-border: rgba(0, 180, 216, 0.40);
+  --accent-teal-glow: rgba(0, 180, 216, 0.28);
 
   --accent-gold: #F29F5A;
 

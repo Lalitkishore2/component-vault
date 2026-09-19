@@ -85,13 +85,17 @@ svg {
 }
 
 .btn-success {
-  background: var(--accent-teal-bg);
-  color: var(--accent-teal);
-  border-color: var(--accent-teal-border);
+  background: linear-gradient(135deg, #297685 0%, #1B3A4B 100%);
+  color: #ffffff;
+  border: 1px solid #64B5C1;
+  box-shadow: 0 2px 8px rgba(41, 118, 133, 0.28);
 }
 
 .btn-success:hover {
-  background: rgba(61, 123, 138, 0.22);
+  background: linear-gradient(135deg, #3895a7 0%, #205e6b 100%);
+  border-color: #90E0EF;
+  box-shadow: 0 4px 14px rgba(41, 118, 133, 0.42);
+  color: #ffffff;
 }
 
 .btn-sm {
@@ -417,9 +421,13 @@ svg {
 }
 
 .stock-bar-fill-available {
-  background: var(--accent-teal);
+  background: linear-gradient(90deg, #1B3A4B 0%, #00B4D8 100%);
   height: 100%;
   transition: width 0.3s ease;
+}
+
+[data-theme="light"] .stock-bar-fill-available {
+  background: linear-gradient(90deg, #1B3A4B 0%, #297685 100%);
 }
 
 .stock-bar-fill-lent {

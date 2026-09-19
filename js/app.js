@@ -2063,10 +2063,32 @@
   // --- Progressive Web App (PWA) & Mobile Installation ---
   function setupServiceWorker() {
     if ('serviceWorker' in navigator) {
+      // Auto-reload immediately when new service worker activates and claims control
+      let isRefreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
           .then(reg => {
             console.log('[PWA] Service Worker active with scope:', reg.scope);
+            // Proactively check for updates periodically (every 45s)
+            setInterval(() => {
+              reg.update().catch(() => {});
+            }, 45000);
+            // Check immediately when user returns to this tab
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') {
+                reg.update().catch(() => {});
+              }
+            });
+            window.addEventListener('focus', () => {
+              reg.update().catch(() => {});
+            });
           })
           .catch(err => {
             console.warn('[PWA] Service Worker registration failed:', err);
