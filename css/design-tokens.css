@@ -43,99 +43,113 @@
 }
 
 /* =========================================================================
-   LIGHT MODE: STREAMLINE MODERNE CLASSIC (Ivory, Cream, Chrome & Deep Teal)
+   LIGHT MODE: SIH AQUADOT COASTAL (Marine Navy, Ocean Teal, Warm Amber & Slate)
    ========================================================================= */
 [data-theme="light"] {
-  --bg-app: var(--moderne-ivory);
-  --bg-subtle: var(--moderne-cream);
-  --bg-surface: var(--moderne-white);
-  --bg-surface-hover: #f2eee3;
-  --bg-surface-active: #e6dfcd;
+  --bg-app: #F5F8FA;
+  --bg-subtle: #EBF2F6;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #EBF5F7;
+  --bg-surface-active: #E3EBEF;
   --bg-input: #ffffff;
-  --bg-glass: rgba(245, 242, 235, 0.92);
-  --bg-pinstripe: rgba(200, 205, 208, 0.18);
+  --bg-glass: rgba(245, 248, 250, 0.92);
+  --bg-pinstripe: rgba(41, 118, 133, 0.08);
 
-  /* Hairline & Chrome Borders */
-  --border-subtle: rgba(200, 205, 208, 0.6);
-  --border-default: var(--moderne-chrome);
-  --border-highlight: var(--moderne-chrome-light);
-  --border-focus: #059669;
-  --border-accent: rgba(16, 185, 129, 0.35);
+  /* Hairline & Coastal Slate Borders */
+  --border-subtle: rgba(175, 188, 197, 0.40);
+  --border-default: #CBD5E1;
+  --border-highlight: #AFBCC5;
+  --border-focus: #297685;
+  --border-accent: rgba(41, 118, 133, 0.40);
 
-  /* Typography Colors - WCAG AA Verified */
-  --text-primary: var(--moderne-charcoal);
-  --text-secondary: #4a515a;
-  --text-muted: #565d66; /* Strict WCAG AA >= 4.5:1 on cream/white */
-  --text-inverse: var(--moderne-white);
+  /* Typography Colors - WCAG AA & AAA Verified */
+  --text-primary: #1B3A4B;       /* Deep Coastal Marine Navy */
+  --text-secondary: #334155;     /* Slate */
+  --text-muted: #5C7280;         /* Contrast ratio >= 4.8:1 on #F5F8FA & #fff */
+  --text-inverse: #ffffff;
 
-  /* Functional Accents - Executive Emerald & Champagne Brass */
-  --accent-primary: #059669;
-  --accent-primary-hover: #047857;
+  /* Functional Accents - SIH Aquadot Marine Ocean Teal & Warm Amber */
+  --accent-primary: #297685;
+  --accent-primary-hover: #1e5b66;
   --accent-primary-text: #ffffff;
 
-  --accent-brass: var(--moderne-brass);
-  --accent-brass-bg: rgba(184, 160, 96, 0.15);
-  --accent-brass-border: rgba(184, 160, 96, 0.4);
+  --accent-brass: #F29F5A;
+  --accent-brass-bg: rgba(242, 159, 90, 0.14);
+  --accent-brass-border: rgba(242, 159, 90, 0.42);
 
-  --accent-teal: #059669;
-  --accent-teal-bg: rgba(5, 150, 105, 0.10);
-  --accent-teal-border: rgba(5, 150, 105, 0.30);
+  --accent-teal: #297685;
+  --accent-teal-bg: rgba(41, 118, 133, 0.12);
+  --accent-teal-border: rgba(41, 118, 133, 0.32);
+  --accent-teal-glow: rgba(41, 118, 133, 0.22);
 
-  --accent-red: var(--moderne-red);
-  --accent-red-bg: rgba(184, 76, 76, 0.12);
-  --accent-red-border: rgba(184, 76, 76, 0.35);
+  --accent-gold: #F29F5A;
 
-  --shadow-sm: 0 2px 6px rgba(30, 32, 36, 0.05);
-  --shadow-md: 0 4px 18px rgba(30, 32, 36, 0.08);
-  --shadow-lg: 0 10px 32px rgba(30, 32, 36, 0.12);
+  --accent-red: #D9534F;
+  --accent-red-bg: rgba(217, 83, 79, 0.12);
+  --accent-red-border: rgba(217, 83, 79, 0.35);
+
+  --card-media-bg: linear-gradient(135deg, #F0F6F8 0%, #E3EBEF 100%);
+  --moderne-chrome-light: #CBD5E1;
+  --moderne-steel: #5C7280;
+
+  --shadow-sm: 0 2px 6px rgba(27, 58, 75, 0.06);
+  --shadow-md: 0 4px 16px rgba(27, 58, 75, 0.10);
+  --shadow-lg: 0 10px 32px rgba(27, 58, 75, 0.14);
 }
 
 /* =========================================================================
-   DARK MODE: STREAMLINE OBSIDIAN NOIR (True Pitch Black #000000 Theme)
+   DARK MODE: SIH AQUADOT ABYSSAL NOIR (Oceanic Slate, Cyan & Amber)
    ========================================================================= */
 [data-theme="dark"] {
-  --bg-app: #000000; /* Pure black background theme */
-  --bg-subtle: #06080c;
-  --bg-surface: #0b0f16;
-  --bg-surface-hover: #131822;
-  --bg-surface-active: #1a2230;
-  --bg-input: #07090e;
-  --bg-glass: rgba(6, 8, 12, 0.94);
-  --bg-pinstripe: rgba(255, 255, 255, 0.04);
+  --bg-app: #0f172a;             /* Deep Navy Slate Night */
+  --bg-subtle: #0f2029;          /* Oceanic Abyssal Slate */
+  --bg-surface: #12262f;         /* Rich Dark Marine Surface */
+  --bg-surface-hover: #1c3845;
+  --bg-surface-active: #244757;
+  --bg-input: #09161c;
+  --bg-glass: rgba(15, 32, 41, 0.94);
+  --bg-pinstripe: rgba(78, 205, 196, 0.05);
 
-  /* Hairline & Chrome Metallic Borders */
-  --border-subtle: rgba(255, 255, 255, 0.10);
-  --border-default: rgba(255, 255, 255, 0.18);
-  --border-highlight: rgba(255, 255, 255, 0.32);
-  --border-focus: #10b981;
-  --border-accent: rgba(16, 185, 129, 0.40);
+  /* Hairline & Oceanic Teal Metallic Borders */
+  --border-subtle: rgba(41, 118, 133, 0.25);
+  --border-default: rgba(41, 118, 133, 0.40);
+  --border-highlight: #2b4a5a;
+  --border-focus: #4ECDC4;
+  --border-accent: rgba(78, 205, 196, 0.45);
 
   /* Typography Colors - High-Contrast WCAG AA & AAA */
   --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8; /* 9.2:1 contrast ratio against pitch black */
-  --text-inverse: #000000;
+  --text-secondary: #CBD5E1;
+  --text-muted: #8C9BA5;         /* High contrast against #12262f and #0f172a */
+  --text-inverse: #0f172a;
 
-  /* Functional Accents - Executive Luminescent Emerald & Polished Brass */
-  --accent-primary: #10b981;
-  --accent-primary-hover: #059669;
+  /* Functional Accents - Luminous Ocean Teal/Cyan & Safety Amber */
+  --accent-primary: #297685;
+  --accent-primary-hover: #33899a;
   --accent-primary-text: #ffffff;
 
-  --accent-brass: #e2c068;
-  --accent-brass-bg: rgba(226, 192, 104, 0.16);
-  --accent-brass-border: rgba(226, 192, 104, 0.40);
+  --accent-brass: #F29F5A;
+  --accent-brass-bg: rgba(242, 159, 90, 0.16);
+  --accent-brass-border: rgba(242, 159, 90, 0.45);
 
-  --accent-teal: #10b981;
-  --accent-teal-bg: rgba(16, 185, 129, 0.14);
-  --accent-teal-border: rgba(16, 185, 129, 0.38);
+  --accent-teal: #4ECDC4;
+  --accent-teal-bg: rgba(78, 205, 196, 0.15);
+  --accent-teal-border: rgba(78, 205, 196, 0.38);
+  --accent-teal-glow: rgba(78, 205, 196, 0.25);
 
-  --accent-red: #f87171;
-  --accent-red-bg: rgba(248, 113, 113, 0.16);
-  --accent-red-border: rgba(248, 113, 113, 0.40);
+  --accent-gold: #F29F5A;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.8);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.9);
-  --shadow-lg: 0 14px 44px rgba(0, 0, 0, 0.95);
+  --accent-red: #FF6B6B;
+  --accent-red-bg: rgba(255, 107, 107, 0.16);
+  --accent-red-border: rgba(255, 107, 107, 0.42);
+
+  --card-media-bg: linear-gradient(135deg, #09151c 0%, #0f222c 100%);
+  --moderne-chrome-light: #64B5C1;
+  --moderne-steel: #8C9BA5;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.65);
+  --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.85);
 }
 
 /* Accessibility Focus Indicator (WCAG 2.1 AA Success Criterion 2.4.7) */

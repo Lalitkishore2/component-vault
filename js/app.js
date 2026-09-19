@@ -1999,18 +1999,21 @@
       const user = window.authService.getCurrentUser();
       
       updateAuthGate(user);
-      if (user) {
-        window.componentStore.setVaultUser(user.id);
+      if (user && window.componentStore) {
+        await window.componentStore.setVaultUser(user.id);
       }
 
-      window.authService.onAuthChange((event, u) => {
+      window.authService.onAuthChange(async (event, u) => {
         if (event === 'login' || event === 'switch') {
           updateAuthGate(u);
-          window.componentStore.setVaultUser(u.id);
+          if (u && window.componentStore) {
+            await window.componentStore.setVaultUser(u.id);
+          }
           closeModal(el.authModal);
           renderAll();
         } else if (event === 'logout') {
           updateAuthGate(null);
+          renderAll();
         }
       });
 

@@ -234,34 +234,60 @@ class ComponentStore {
 
     this.init();
     this.notify();
-    await this.pullActiveVaultFromCloud();
+    await this.pullActiveVaultFromCloud(true);
   }
 
-  async pullActiveVaultFromCloud() {
+  async pullActiveVaultFromCloud(force = false) {
     if (window.cloudDb && typeof window.cloudDb.loadFromFirestore === 'function') {
       try {
         const vaultId = this.getActiveVaultId();
         const firestoreDocId = `${this.userId}_${vaultId}`;
+        this.setSyncStatus('syncing');
         const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
-        if (remote && Array.isArray(remote.components)) {
+        if (remote && Array.isArray(remote.components) && remote.components.length > 0) {
           const localRaw = localStorage.getItem(this.getStorageKey());
-          const localSavedAt = localRaw ? (JSON.parse(localRaw).savedAt || '') : '';
-          const remoteSavedAt = remote.savedAt || '';
-          if (!localRaw || (remoteSavedAt && remoteSavedAt > localSavedAt)) {
+          let shouldUpdate = force || !localRaw;
+
+          if (localRaw && !shouldUpdate) {
+            try {
+              const localParsed = JSON.parse(localRaw);
+              const localComps = localParsed.components || [];
+              const localSavedAt = localParsed.savedAt || '';
+              const remoteSavedAt = remote.savedAt || '';
+              const starterIds = ['comp-rpi5-8gb', 'comp-esp32-wroom', 'comp-uno-r3', 'comp-hcsr04'];
+              const isLocalStarter = localComps.length <= 4 && localComps.every(c => starterIds.includes(c.id));
+
+              if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length > localComps.length) {
+                shouldUpdate = true;
+              }
+            } catch (e) {
+              shouldUpdate = true;
+            }
+          }
+
+          if (shouldUpdate) {
             this.components = remote.components;
             this.activityLog = remote.activityLog || [];
             localStorage.setItem(this.getStorageKey(), JSON.stringify({
               components: this.components,
               activityLog: this.activityLog,
-              savedAt: remoteSavedAt || new Date().toISOString()
+              savedAt: remote.savedAt || new Date().toISOString()
             }));
             this.notify();
           }
+          this.setSyncStatus('synced');
+          return true;
+        } else {
+          this.setSyncStatus('synced');
+          return false;
         }
       } catch (err) {
-        console.warn('Cloud pull check skipped:', err);
+        console.warn('Cloud pull error:', err);
+        this.setSyncStatus('error', err.message);
+        return false;
       }
     }
+    return false;
   }
 
   init() {
