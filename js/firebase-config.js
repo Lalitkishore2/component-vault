@@ -129,6 +129,15 @@
           }
           this.googleProvider = new firebase.auth.GoogleAuthProvider();
           this.isConfigured = true;
+
+          // Broadcast when Firebase Auth restores session or user logs in
+          this.auth.onAuthStateChanged((user) => {
+            this._initialAuthResolved = true;
+            if (user && typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('cv_auth_ready', { detail: user }));
+            }
+          });
+
           return true;
         } else {
           console.info('Firebase CDN SDK not yet loaded in DOM.');
@@ -142,24 +151,24 @@
       }
     }
 
-    waitForAuth() {
-      if (this._authInitPromise) return this._authInitPromise;
-      this._authInitPromise = new Promise(async (resolve) => {
-        await this.whenReady();
-        if (!this.auth) {
-          return resolve(null);
-        }
-        if (this.auth.currentUser) {
-          return resolve(this.auth.currentUser);
-        }
-        const unsubscribe = this.auth.onAuthStateChanged((user) => {
-          unsubscribe();
-          resolve(user);
-        }, () => {
-          resolve(null);
+    async waitForAuth() {
+      await this.whenReady();
+      if (!this.auth) return null;
+      if (this.auth.currentUser) return this.auth.currentUser;
+
+      if (!this._initialAuthResolved) {
+        await new Promise((resolve) => {
+          const unsubscribe = this.auth.onAuthStateChanged((user) => {
+            unsubscribe();
+            this._initialAuthResolved = true;
+            resolve(user);
+          }, () => {
+            this._initialAuthResolved = true;
+            resolve(null);
+          });
         });
-      });
-      return this._authInitPromise;
+      }
+      return this.auth.currentUser || null;
     }
 
     _formatGoogleUser(user) {
@@ -260,30 +269,63 @@
 
       let isUnsubscribed = false;
       let unsubscribeFirestore = null;
+      let isSubscribed = false;
+
+      const attachListener = () => {
+        if (isUnsubscribed || isSubscribed || !this.firestore) return;
+        if (!this.auth || !this.auth.currentUser) return;
+
+        try {
+          unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
+            .onSnapshot({ includeMetadataChanges: true }, (doc) => {
+              if (doc.exists && typeof onData === 'function') {
+                onData(doc.data());
+              }
+            }, (err) => {
+              console.warn('Firestore snapshot subscription warning:', err);
+              isSubscribed = false;
+              if (typeof onError === 'function') onError(err);
+            });
+          isSubscribed = true;
+        } catch (subErr) {
+          console.warn('Failed to attach Firestore snapshot listener:', subErr);
+          isSubscribed = false;
+          if (typeof onError === 'function') onError(subErr);
+        }
+      };
 
       this.whenReady().then((ready) => {
         if (isUnsubscribed || !ready || !this.firestore) return;
-        return this.waitForAuth().then(() => {
+        this.waitForAuth().then((user) => {
           if (isUnsubscribed) return;
-          try {
-            unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
-              .onSnapshot({ includeMetadataChanges: true }, (doc) => {
-                if (doc.exists && typeof onData === 'function') {
-                  onData(doc.data());
-                }
-              }, (err) => {
-                console.warn('Firestore snapshot subscription warning:', err);
-                if (typeof onError === 'function') onError(err);
-              });
-          } catch (subErr) {
-            console.warn('Failed to attach Firestore snapshot listener:', subErr);
-            if (typeof onError === 'function') onError(subErr);
+          if (user) {
+            attachListener();
+          }
+        });
+      });
+
+      // Self-healing auth listener: attach as soon as Google user session becomes active
+      let authUnsubscribe = null;
+      this.whenReady().then((ready) => {
+        if (isUnsubscribed || !ready || !this.auth) return;
+        authUnsubscribe = this.auth.onAuthStateChanged((user) => {
+          if (isUnsubscribed) return;
+          if (user && !isSubscribed) {
+            attachListener();
+          } else if (!user && isSubscribed) {
+            if (typeof unsubscribeFirestore === 'function') {
+              try { unsubscribeFirestore(); } catch (e) {}
+            }
+            isSubscribed = false;
           }
         });
       });
 
       return () => {
         isUnsubscribed = true;
+        if (typeof authUnsubscribe === 'function') {
+          try { authUnsubscribe(); } catch (e) {}
+        }
         if (typeof unsubscribeFirestore === 'function') {
           try {
             unsubscribeFirestore();

@@ -19,6 +19,14 @@ class ComponentStore {
     this.init();
     this.setupFirestoreSync();
     this.startPeriodicCloudSync();
+
+    // Whenever Firebase Auth session is confirmed/restored, auto-pull latest data and re-sync
+    if (typeof window !== 'undefined') {
+      window.addEventListener('cv_auth_ready', () => {
+        this.pullActiveVaultFromCloud(true);
+        this.setupFirestoreSync();
+      });
+    }
   }
 
   startPeriodicCloudSync() {

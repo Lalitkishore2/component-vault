@@ -1,5 +1,5 @@
 // Component Vault Service Worker - Offline PWA Cache
-const CACHE_NAME = 'component-vault-v2.1';
+const CACHE_NAME = 'component-vault-v2.2';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -54,8 +54,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First for HTML navigation so deployed updates reflect immediately
-  if (request.mode === 'navigate') {
+  // Network-First for HTML navigation AND code assets (JS, CSS)
+  // Ensures all devices immediately run the latest sync engine, bug fixes, and styles
+  const isCodeAsset = request.destination === 'script' || 
+                      request.destination === 'style' || 
+                      url.pathname.endsWith('.js') || 
+                      url.pathname.endsWith('.css');
+
+  if (request.mode === 'navigate' || isCodeAsset) {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
@@ -65,12 +71,12 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match('./index.html') || caches.match('./'))
+        .catch(() => caches.match(request).then(cached => cached || (request.mode === 'navigate' ? caches.match('./index.html') : null)))
     );
     return;
   }
 
-  // Stale-While-Revalidate for local static assets
+  // Stale-While-Revalidate for non-code static assets (images, fonts, icons)
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       const fetchPromise = fetch(request).then((networkResponse) => {
