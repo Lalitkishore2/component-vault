@@ -10,8 +10,90 @@ class ComponentStore {
     this.syncStatus = 'synced'; // 'synced' | 'syncing' | 'error' | 'offline'
     this.syncError = null;
     this.onSyncStatusChange = null;
+    this.firestoreUnsubscribe = null;
+    this._lastSavedAt = null;
+    this._visibilityListenerAttached = false;
+    this._onlineListenerAttached = false;
     this.setupCrossTabSync();
     this.init();
+    this.setupFirestoreSync();
+  }
+
+  setupFirestoreSync() {
+    if (this.firestoreUnsubscribe) {
+      try { this.firestoreUnsubscribe(); } catch (e) {}
+      this.firestoreUnsubscribe = null;
+    }
+
+    if (!window.cloudDb || typeof window.cloudDb.subscribeToFirestore !== 'function') {
+      return;
+    }
+
+    const vaultId = this.getActiveVaultId();
+    const firestoreDocId = `${this.userId}_${vaultId}`;
+
+    this.firestoreUnsubscribe = window.cloudDb.subscribeToFirestore(
+      firestoreDocId,
+      (remoteData) => {
+        this.handleRemoteUpdate(remoteData);
+      },
+      (err) => {
+        if (err && err.code === 'permission-denied') {
+          this.setSyncStatus('error', 'Cloud sync permissions denied. Please sign in with an authorized Google account.');
+        } else {
+          this.setSyncStatus('error', err.message || 'Cloud sync error');
+        }
+      }
+    );
+  }
+
+  handleRemoteUpdate(remote) {
+    if (!remote || !Array.isArray(remote.components)) return;
+
+    // Echo prevention: if this remote snapshot matches our last local save, skip re-applying
+    if (this._lastSavedAt && remote.savedAt === this._lastSavedAt) {
+      this.setSyncStatus('synced');
+      return;
+    }
+
+    const localRaw = localStorage.getItem(this.getStorageKey());
+    let shouldApply = !localRaw;
+
+    if (localRaw && !shouldApply) {
+      try {
+        const localParsed = JSON.parse(localRaw);
+        const localSavedAt = localParsed.savedAt || '';
+        const remoteSavedAt = remote.savedAt || '';
+        const localComps = localParsed.components || [];
+
+        const starterIds = ['comp-rpi5-8gb', 'comp-esp32-wroom', 'comp-uno-r3', 'comp-hcsr04'];
+        const isLocalStarter = localComps.length <= 4 && localComps.every(c => starterIds.includes(c.id));
+
+        if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length !== localComps.length) {
+          shouldApply = true;
+        } else if (JSON.stringify(remote.components) !== JSON.stringify(localComps)) {
+          shouldApply = true;
+        }
+      } catch (e) {
+        shouldApply = true;
+      }
+    }
+
+    if (shouldApply) {
+      console.log('[Store] Applying real-time cloud update from Firestore...');
+      this.components = remote.components;
+      this.activityLog = remote.activityLog || [];
+      this._lastSavedAt = remote.savedAt || new Date().toISOString();
+      localStorage.setItem(this.getStorageKey(), JSON.stringify({
+        components: this.components,
+        activityLog: this.activityLog,
+        savedAt: this._lastSavedAt
+      }));
+      this.setSyncStatus('synced');
+      this.notify();
+    } else {
+      this.setSyncStatus('synced');
+    }
   }
 
   setupCrossTabSync() {
@@ -149,8 +231,9 @@ class ComponentStore {
     this.notify();
     this.broadcastUpdate();
 
-    // Pull cloud data for this switched vault
+    // Pull cloud data for this switched vault and attach real-time listener
     await this.pullActiveVaultFromCloud();
+    this.setupFirestoreSync();
   }
 
   async createVault({ name, tagline = '', includeStarter = true }) {
@@ -186,6 +269,7 @@ class ComponentStore {
     this.components = initialComponents;
     this.activityLog = initialActivity;
     this.save();
+    this.setupFirestoreSync();
 
     return newVault;
   }
@@ -204,6 +288,7 @@ class ComponentStore {
       localStorage.setItem(this.getActiveVaultKey(), filtered[0].id);
       this.init();
       this.notify();
+      this.setupFirestoreSync();
     }
     this.broadcastUpdate();
     return true;
@@ -235,6 +320,7 @@ class ComponentStore {
     this.init();
     this.notify();
     await this.pullActiveVaultFromCloud(true);
+    this.setupFirestoreSync();
   }
 
   async pullActiveVaultFromCloud(force = false) {
@@ -244,7 +330,7 @@ class ComponentStore {
         const firestoreDocId = `${this.userId}_${vaultId}`;
         this.setSyncStatus('syncing');
         const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
-        if (remote && Array.isArray(remote.components) && remote.components.length > 0) {
+        if (remote && Array.isArray(remote.components)) {
           const localRaw = localStorage.getItem(this.getStorageKey());
           let shouldUpdate = force || !localRaw;
 
@@ -257,7 +343,9 @@ class ComponentStore {
               const starterIds = ['comp-rpi5-8gb', 'comp-esp32-wroom', 'comp-uno-r3', 'comp-hcsr04'];
               const isLocalStarter = localComps.length <= 4 && localComps.every(c => starterIds.includes(c.id));
 
-              if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length > localComps.length) {
+              if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length !== localComps.length) {
+                shouldUpdate = true;
+              } else if (JSON.stringify(remote.components) !== JSON.stringify(localComps)) {
                 shouldUpdate = true;
               }
             } catch (e) {
@@ -268,10 +356,11 @@ class ComponentStore {
           if (shouldUpdate) {
             this.components = remote.components;
             this.activityLog = remote.activityLog || [];
+            this._lastSavedAt = remote.savedAt || new Date().toISOString();
             localStorage.setItem(this.getStorageKey(), JSON.stringify({
               components: this.components,
               activityLog: this.activityLog,
-              savedAt: remote.savedAt || new Date().toISOString()
+              savedAt: this._lastSavedAt
             }));
             this.notify();
           }
@@ -316,6 +405,7 @@ class ComponentStore {
         const parsed = JSON.parse(raw);
         this.components = parsed.components || [];
         this.activityLog = parsed.activityLog || [];
+        this._lastSavedAt = parsed.savedAt || null;
       } else {
         this.resetToDefaults(false);
       }
@@ -326,6 +416,20 @@ class ComponentStore {
         window.addEventListener('online', () => {
           console.log('[Store] Internet connection restored, syncing with Firestore...');
           this.syncToCloudNow();
+          this.pullActiveVaultFromCloud();
+        });
+      }
+
+      // Auto-refresh from cloud when tab becomes visible or focused
+      if (typeof window !== 'undefined' && !this._visibilityListenerAttached) {
+        this._visibilityListenerAttached = true;
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            this.pullActiveVaultFromCloud();
+          }
+        });
+        window.addEventListener('focus', () => {
+          this.pullActiveVaultFromCloud();
         });
       }
     } catch (e) {
@@ -356,6 +460,7 @@ class ComponentStore {
         activityLog: this.activityLog,
         savedAt: new Date().toISOString()
       };
+      this._lastSavedAt = payload.savedAt;
       if (window.cloudDb && typeof window.cloudDb.saveToFirestore === 'function') {
         const ok = await window.cloudDb.saveToFirestore(firestoreDocId, payload);
         if (ok) {
@@ -382,6 +487,7 @@ class ComponentStore {
         activityLog: this.activityLog,
         savedAt: new Date().toISOString()
       };
+      this._lastSavedAt = payload.savedAt;
       localStorage.setItem(this.getStorageKey(), JSON.stringify(payload));
 
       // Asynchronously mirror this vault to Cloud Firestore if connected

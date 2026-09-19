@@ -552,7 +552,7 @@
       <article class="component-card" data-component-id="${item.id}">
         <!-- Photo thumbnail -->
         <div class="card-media" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-          <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async">
+          <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" decoding="auto">
           <div class="card-media-overlay">
             <span class="card-category-tag">${escapeHTML(item.category || 'General')}</span>
             <span class="card-bin-tag">${escapeHTML(item.locationBin || 'UNASSIGNED')}</span>
@@ -2190,22 +2190,29 @@
     const scrollProgressBar = document.getElementById('scrollProgressBar');
     const backToTopBtn = document.getElementById('backToTopBtn');
 
-    // 1. Scroll Progress Bar & Floating Back-to-Top
+    // 1. Scroll Progress Bar & Floating Back-to-Top (Throttled with requestAnimationFrame)
+    let isScrollTicking = false;
     const onScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      if (scrollProgressBar && scrollHeight > 0) {
-        const progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
-        scrollProgressBar.style.width = `${progress}%`;
-        scrollProgressBar.setAttribute('aria-valuenow', Math.round(progress));
-      }
+      if (!isScrollTicking) {
+        window.requestAnimationFrame(() => {
+          const scrollTop = window.scrollY || document.documentElement.scrollTop;
+          const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+          if (scrollProgressBar && scrollHeight > 0) {
+            const progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
+            scrollProgressBar.style.width = `${progress}%`;
+            scrollProgressBar.setAttribute('aria-valuenow', Math.round(progress));
+          }
 
-      if (backToTopBtn) {
-        if (scrollTop > 240) {
-          backToTopBtn.classList.add('visible');
-        } else {
-          backToTopBtn.classList.remove('visible');
-        }
+          if (backToTopBtn) {
+            if (scrollTop > 240) {
+              backToTopBtn.classList.add('visible');
+            } else {
+              backToTopBtn.classList.remove('visible');
+            }
+          }
+          isScrollTicking = false;
+        });
+        isScrollTicking = true;
       }
     };
 

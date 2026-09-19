@@ -248,6 +248,9 @@ svg {
   position: relative;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 350px;
 }
 
 .component-card::before {
@@ -274,6 +277,14 @@ svg {
   width: 100%;
   height: 185px;
   background: var(--card-media-bg, #0b0e13);
+  background-image: linear-gradient(
+    110deg,
+    rgba(41, 118, 133, 0.04) 0%,
+    rgba(0, 180, 216, 0.10) 25%,
+    rgba(41, 118, 133, 0.04) 50%
+  );
+  background-size: 200% 100%;
+  animation: cardMediaShimmer 3s infinite linear;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,12 +294,17 @@ svg {
   transition: background var(--transition-smooth);
 }
 
+@keyframes cardMediaShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .card-media img, .card-media svg {
   width: 100%;
   height: 100%;
   object-fit: contain;
   padding: 0.85rem;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.2s ease;
 }
 
 .card-media:hover img, .card-media:hover svg {
@@ -2064,4 +2080,23 @@ svg {
   flex-shrink: 0;
 }
 
+/* Mobile Smooth Scrolling & GPU Optimization (Aquadot Streamline) */
+@media (max-width: 768px) {
+  .component-card {
+    contain: layout style;
+    content-visibility: auto;
+    contain-intrinsic-size: 0 340px;
+  }
 
+  .card-category-tag,
+  .card-bin-tag {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(18, 38, 47, 0.94);
+  }
+
+  [data-theme="light"] .card-category-tag,
+  [data-theme="light"] .card-bin-tag {
+    background: rgba(255, 255, 255, 0.96);
+  }
+}

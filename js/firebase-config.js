@@ -120,6 +120,22 @@
       }
     }
 
+    waitForAuth() {
+      if (this._authInitPromise) return this._authInitPromise;
+      if (!this.auth) {
+        return Promise.resolve(null);
+      }
+      this._authInitPromise = new Promise((resolve) => {
+        const unsubscribe = this.auth.onAuthStateChanged((user) => {
+          unsubscribe();
+          resolve(user);
+        }, () => {
+          resolve(null);
+        });
+      });
+      return this._authInitPromise;
+    }
+
     _formatGoogleUser(user) {
       if (!user) return null;
       return {
@@ -171,6 +187,7 @@
     async saveToFirestore(userId, data) {
       if (!this.isConfigured || !this.firestore || !userId) return false;
       try {
+        await this.waitForAuth();
         const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
         await this.firestore.collection('component_vaults').doc(cleanUserId).set({
           ...data,
@@ -191,6 +208,7 @@
     async loadFromFirestore(userId) {
       if (!this.isConfigured || !this.firestore || !userId) return null;
       try {
+        await this.waitForAuth();
         const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
         const doc = await this.firestore.collection('component_vaults').doc(cleanUserId).get();
         if (doc.exists) {
@@ -200,6 +218,41 @@
         console.warn('Firestore read error:', err);
       }
       return null;
+    }
+
+    subscribeToFirestore(userId, onData, onError) {
+      if (!this.isConfigured || !this.firestore || !userId) return () => {};
+      const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      let isUnsubscribed = false;
+      let unsubscribeFirestore = null;
+
+      this.waitForAuth().then(() => {
+        if (isUnsubscribed) return;
+        try {
+          unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
+            .onSnapshot((doc) => {
+              if (doc.exists && typeof onData === 'function') {
+                onData(doc.data());
+              }
+            }, (err) => {
+              console.warn('Firestore snapshot subscription warning:', err);
+              if (typeof onError === 'function') onError(err);
+            });
+        } catch (subErr) {
+          console.warn('Failed to attach Firestore snapshot listener:', subErr);
+          if (typeof onError === 'function') onError(subErr);
+        }
+      });
+
+      return () => {
+        isUnsubscribed = true;
+        if (typeof unsubscribeFirestore === 'function') {
+          try {
+            unsubscribeFirestore();
+          } catch (e) {}
+        }
+      };
     }
   }
 

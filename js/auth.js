@@ -143,8 +143,12 @@
               return;
             }
             const formatted = window.cloudDb._formatGoogleUser(fbUser);
-            if (formatted && (!this.currentUser || this.currentUser.id !== formatted.id)) {
-              await this.loginWithGoogle(formatted);
+            if (formatted) {
+              if (!this.currentUser || this.currentUser.id !== formatted.id) {
+                await this.loginWithGoogle(formatted);
+              } else if (window.componentStore) {
+                await window.componentStore.setVaultUser(formatted.id);
+              }
             }
           }
         });
