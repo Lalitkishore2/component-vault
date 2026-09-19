@@ -2226,6 +2226,50 @@
     // New Component Modal Trigger
     el.openNewComponentBtn.addEventListener('click', openNewComponentModal);
 
+    // Prevent accidental form submission when pressing Enter in single-line inputs
+    // Moves focus to the next field instead, while allowing Ctrl+Enter / Cmd+Enter to submit
+    function preventAccidentalSubmitOnEnter(form) {
+      if (!form) return;
+      form.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          // Allow default multiline behavior in textareas
+          if (e.target.tagName === 'TEXTAREA') return;
+
+          // Allow Ctrl+Enter or Cmd+Enter to explicitly submit the form
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (typeof form.requestSubmit === 'function') {
+              form.requestSubmit();
+            } else {
+              form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+            return;
+          }
+
+          // If focus is currently on a button (like submit or cancel), let it perform its action
+          if (e.target.tagName === 'BUTTON') return;
+
+          // Prevent premature form submit on input fields
+          e.preventDefault();
+
+          // Advance focus to the next visible focusable input in the form
+          const focusable = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button.btn-primary:not([disabled])'))
+            .filter(elem => elem.offsetParent !== null);
+
+          const currentIndex = focusable.indexOf(e.target);
+          if (currentIndex > -1 && currentIndex < focusable.length - 1) {
+            focusable[currentIndex + 1].focus();
+          }
+        }
+      });
+    }
+
+    preventAccidentalSubmitOnEnter(el.componentForm);
+    preventAccidentalSubmitOnEnter(el.lendForm);
+    preventAccidentalSubmitOnEnter(el.createVaultForm);
+    preventAccidentalSubmitOnEnter(el.editVaultForm);
+    preventAccidentalSubmitOnEnter(el.cloudConfigForm);
+
     // Save Component Form
     el.componentForm.addEventListener('submit', async e => {
       e.preventDefault();
