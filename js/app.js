@@ -227,6 +227,10 @@
     el.html.setAttribute('data-theme', theme);
     localStorage.setItem('CV_THEME', theme);
     const isLight = theme === 'light';
+    const dynamicFavicon = document.getElementById('dynamicFavicon');
+    if (dynamicFavicon) {
+      dynamicFavicon.href = isLight ? 'assets/black-icon.svg' : 'assets/white-icon.svg';
+    }
     if (el.themeIconDark && el.themeIconLight) {
       el.themeIconDark.style.display = isLight ? 'none' : 'block';
       el.themeIconLight.style.display = isLight ? 'block' : 'none';

@@ -12,11 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@200;300;400;500;600&family=Raleway:wght@200;300;400;500;600&family=Tenor+Sans&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/design-tokens.css?v=3.0">
-  <link rel="stylesheet" href="css/layout.css?v=3.0">
-  <link rel="stylesheet" href="css/components.css?v=3.0">
-  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="css/design-tokens.css?v=3.1">
+  <link rel="stylesheet" href="css/layout.css?v=3.1">
+  <link rel="stylesheet" href="css/components.css?v=3.1">
+  <link rel="icon" id="dynamicFavicon" href="assets/white-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512.png">
 
   <!-- Progressive Web App (PWA) Manifest & Mobile App Capabilities -->
   <link rel="manifest" href="manifest.webmanifest">
@@ -63,8 +64,8 @@
       <!-- Streamline Aerodynamic Emblem from user SVGs -->
       <div class="login-brand">
         <div class="login-brand-logo" aria-label="Component Vault">
-          <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark">
-          <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light">
+          <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-black" decoding="async">
+          <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-white" decoding="async">
         </div>
         <h1 class="login-brand-title">Component Vault</h1>
         <p class="login-brand-tagline">Streamline Moderne Hardware Lab &amp; Project Custody Ledger</p>
@@ -121,8 +122,8 @@
         <div class="brand-section">
           <div class="brand-left">
             <div class="brand-logo" aria-label="Component Vault">
-              <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark" decoding="async">
-              <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light" decoding="async">
+              <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-black" decoding="async">
+              <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-white" decoding="async">
             </div>
             <div>
               <h1 class="brand-title">
@@ -154,6 +155,7 @@
           <button id="tabBorrowers" class="nav-tab-btn" role="tab" aria-selected="false" aria-controls="borrowersViewWrapper">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <span class="tab-label-desktop">Borrowers &amp; Projects</span>
+            <span class="tab-label-compact">Projects</span>
             <span class="tab-label-mobile">Projects</span>
             <span class="nav-tab-count" id="tabCountLoans">0</span>
           </button>
@@ -245,7 +247,7 @@
           </button>
 
           <!-- Backup Modal Trigger -->
-          <button id="openBackupBtn" class="btn btn-secondary btn-sm" title="Data Backup &amp; Restore">
+          <button id="openBackupBtn" class="btn btn-secondary btn-sm header-backup-btn" title="Data Backup &amp; Restore">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span class="backup-btn-text">Backup</span>
           </button>
@@ -267,8 +269,8 @@
       <div class="mobile-menu-header">
         <div style="display: flex; align-items: center; gap: 0.65rem;">
           <div class="brand-logo" style="width: 32px; height: 32px; border-radius: 8px;">
-            <img src="assets/black-icon.svg" alt="Vault" class="brand-logo-img logo-img-dark">
-            <img src="assets/white-icon.svg" alt="Vault" class="brand-logo-img logo-img-light">
+            <img src="assets/black-icon.svg" alt="Vault" class="brand-logo-img logo-black">
+            <img src="assets/white-icon.svg" alt="Vault" class="brand-logo-img logo-white">
           </div>
           <div class="mobile-menu-title">Vault &amp; Account Controls</div>
         </div>
@@ -1231,13 +1233,13 @@
   </div>
 
   <!-- Scripts -->
-  <script defer src="js/firebase-credentials.local.js?v=3.0" onerror="this.onerror=null;"></script>
-  <script defer src="js/firebase-config.js?v=3.0"></script>
-  <script defer src="js/sample-data.js?v=3.0"></script>
-  <script defer src="js/auth.js?v=3.0"></script>
-  <script defer src="js/store.js?v=3.0"></script>
-  <script defer src="js/jspdf.umd.min.js?v=3.0"></script>
-  <script defer src="js/jspdf.plugin.autotable.min.js?v=3.0"></script>
-  <script defer src="js/app.js?v=3.0"></script>
+  <script defer src="js/firebase-credentials.local.js?v=3.1" onerror="this.onerror=null;"></script>
+  <script defer src="js/firebase-config.js?v=3.1"></script>
+  <script defer src="js/sample-data.js?v=3.1"></script>
+  <script defer src="js/auth.js?v=3.1"></script>
+  <script defer src="js/store.js?v=3.1"></script>
+  <script defer src="js/jspdf.umd.min.js?v=3.1"></script>
+  <script defer src="js/jspdf.plugin.autotable.min.js?v=3.1"></script>
+  <script defer src="js/app.js?v=3.1"></script>
 </body>
 </html>
