@@ -56,7 +56,7 @@ Built with **vanilla semantic HTML5, CSS3 design tokens, and reactive JavaScript
 
 ---
 
-## 🛠️ Local Setup & Private Firebase (For New Users & Contributors)
+##  Local Setup & Private Firebase (For New Users & Contributors)
 
 ### 1. Running Locally (Zero Cloud / Zero Firebase Required)
 You can run Component Vault 100% locally and offline without creating any Firebase project:
@@ -188,5 +188,5 @@ Once configured:
 
 ---
 
-## 📜 License
+##  License
 MIT License. Free to use, adapt, and self-host for maker spaces, hardware labs, and personal workshops!
