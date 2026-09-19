@@ -656,7 +656,7 @@ h1, h2, h3, h4 {
 .mobile-vaults-list .user-vault-item.active {
   border-color: var(--accent-teal) !important;
   border-left: 3.5px solid var(--accent-teal) !important;
-  background: var(--accent-teal-bg) !important;
+  background: rgba(41, 118, 133, 0.12) !important;
 }
 
 .mobile-vaults-list button.user-vault-action-btn {
@@ -960,14 +960,14 @@ h1, h2, h3, h4 {
   background: var(--accent-primary);
   color: #ffffff;
   border-color: var(--accent-primary);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.30);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.30);
 }
 
 [data-theme="dark"] .filter-toggle-btn.active {
-  background: var(--accent-primary);
-  color: #ffffff;
-  border-color: var(--accent-primary);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.40);
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
 }
 
 .filter-toggle-btn.active svg {
@@ -975,7 +975,7 @@ h1, h2, h3, h4 {
 }
 
 [data-theme="dark"] .filter-toggle-btn.active svg {
-  stroke: #ffffff;
+  stroke: #000000;
 }
 
 .filter-chevron {
@@ -1008,7 +1008,7 @@ h1, h2, h3, h4 {
 }
 
 [data-theme="dark"] .filter-toggle-btn.active .filter-badge {
-  background: rgba(255, 255, 255, 0.25);
+  background: #000000;
   color: #ffffff;
 }
 
@@ -1019,9 +1019,9 @@ h1, h2, h3, h4 {
   gap: 0.45rem;
   padding: 0.5rem 1.25rem;
   min-height: 44px;
-  background: linear-gradient(135deg, #2563EB 0%, #1B3A4B 100%);
+  background: linear-gradient(135deg, #297685 0%, #1B3A4B 100%);
   color: #ffffff !important;
-  border: 1px solid #2563EB;
+  border: 1px solid #297685;
   border-radius: var(--radius-full);
   font-family: var(--font-display);
   font-size: 0.82rem;
@@ -1032,28 +1032,28 @@ h1, h2, h3, h4 {
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
+  box-shadow: 0 4px 14px rgba(41, 118, 133, 0.32);
 }
 
 [data-theme="dark"] .toolbar-add-btn {
-  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-  color: #ffffff !important;
-  border-color: #3B82F6;
-  box-shadow: 0 2px 14px rgba(59, 130, 246, 0.35);
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #cbd5e1 100%);
+  color: #000000 !important;
+  border-color: #ffffff;
+  box-shadow: 0 2px 14px rgba(255, 255, 255, 0.22);
 }
 
 .toolbar-add-btn:hover {
-  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-  border-color: #60A5FA;
+  background: linear-gradient(135deg, #3895a7 0%, #205e6b 100%);
+  border-color: #64B5C1;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.48);
+  box-shadow: 0 6px 20px rgba(41, 118, 133, 0.48);
 }
 
 [data-theme="dark"] .toolbar-add-btn:hover {
-  background: linear-gradient(135deg, #60A5FA 0%, #2563EB 100%);
-  color: #ffffff !important;
-  border-color: #93C5FD;
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.55);
+  background: #ffffff;
+  color: #000000 !important;
+  border-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.45);
   transform: translateY(-1px);
 }
 
@@ -1064,7 +1064,7 @@ h1, h2, h3, h4 {
 }
 
 [data-theme="dark"] .toolbar-add-btn svg {
-  stroke: #ffffff;
+  stroke: #000000;
 }
 
 /* Floating Back-to-Top Button */
