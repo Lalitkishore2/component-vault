@@ -1,5 +1,5 @@
 // Component Vault Service Worker - Offline PWA Cache
-const CACHE_NAME = 'component-vault-v2.6';
+const CACHE_NAME = 'component-vault-v2.7';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ const CORE_ASSETS = [
   './js/firebase-config.js',
   './js/auth.js',
   './js/store.js',
+  './js/jspdf.umd.min.js',
+  './js/jspdf.plugin.autotable.min.js',
   './js/app.js',
   './manifest.webmanifest',
   './assets/icon.svg',

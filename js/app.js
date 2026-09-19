@@ -182,9 +182,11 @@
     cloudConfigAlert: document.getElementById('cloudConfigAlert'),
     clearCloudConfigBtn: document.getElementById('clearCloudConfigBtn'),
 
-    // Backup
+    // Backup & Export
     openBackupBtn: document.getElementById('openBackupBtn'),
     backupModal: document.getElementById('backupModal'),
+    downloadPdfExportBtn: document.getElementById('downloadPdfExportBtn'),
+    printPdfReportBtn: document.getElementById('printPdfReportBtn'),
     downloadExportBtn: document.getElementById('downloadExportBtn'),
     triggerImportBtn: document.getElementById('triggerImportBtn'),
     importFileInput: document.getElementById('importFileInput'),
@@ -1295,50 +1297,415 @@
 
   // --- Backup & Restore Handlers ---
   function setupBackupHandlers() {
-    el.openBackupBtn.addEventListener('click', () => {
-      openModal(el.backupModal);
-    });
+    if (el.openBackupBtn) {
+      el.openBackupBtn.addEventListener('click', () => {
+        openModal(el.backupModal);
+      });
+    }
 
-    el.downloadExportBtn.addEventListener('click', () => {
-      const jsonStr = window.componentStore.exportData();
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `component_vault_moderne_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
+    // PDF Download Ledger Report
+    if (el.downloadPdfExportBtn) {
+      el.downloadPdfExportBtn.addEventListener('click', () => {
+        generateInventoryPdf('download');
+      });
+    }
 
-    el.triggerImportBtn.addEventListener('click', () => {
-      el.importFileInput.click();
-    });
+    // Print / Save as PDF
+    if (el.printPdfReportBtn) {
+      el.printPdfReportBtn.addEventListener('click', () => {
+        generateInventoryPdf('print');
+      });
+    }
 
-    el.importFileInput.addEventListener('change', e => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
+    // JSON Export
+    if (el.downloadExportBtn) {
+      el.downloadExportBtn.addEventListener('click', () => {
+        const jsonStr = window.componentStore.exportData();
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `component_vault_moderne_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    }
 
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          window.componentStore.importData(ev.target.result);
+    if (el.triggerImportBtn) {
+      el.triggerImportBtn.addEventListener('click', () => {
+        el.importFileInput.click();
+      });
+    }
+
+    if (el.importFileInput) {
+      el.importFileInput.addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            window.componentStore.importData(ev.target.result);
+            closeModal(el.backupModal);
+            alert('Backup restored successfully!');
+          } catch (err) {
+            alert('Error restoring backup: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    if (el.resetDemoDataBtn) {
+      el.resetDemoDataBtn.addEventListener('click', () => {
+        if (confirm('Restore the demo Streamline catalog and sample project loans?')) {
+          window.componentStore.resetToDefaults(true);
           closeModal(el.backupModal);
-          alert('Backup restored successfully!');
-        } catch (err) {
-          alert('Error restoring backup: ' + err.message);
         }
-      };
-      reader.readAsText(file);
+      });
+    }
+  }
+
+  // --- PDF Inventory Ledger & Audit Generation ---
+  function generateInventoryPdf(action = 'download') {
+    try {
+      const vault = window.componentStore.getActiveVault() || { name: 'Main Hardware Lab', tagline: '' };
+      const components = window.componentStore.getComponents() || [];
+      const user = (window.firebaseAuth && window.firebaseAuth.currentUser) || null;
+      const custodianName = user ? (user.displayName || user.email || 'Lab Custodian') : 'Lab Custodian';
+
+      // Summary KPIs
+      const totalModels = components.length;
+      let totalUnits = 0;
+      let availableUnits = 0;
+      let lentUnits = 0;
+      let deadUnits = 0;
+
+      components.forEach(c => {
+        totalUnits += (parseInt(c.totalQty, 10) || 0);
+        availableUnits += (parseInt(c.availableQty, 10) || 0);
+        lentUnits += (parseInt(c.lentQty, 10) || 0);
+        deadUnits += (parseInt(c.deadQty, 10) || 0);
+      });
+
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        console.warn('[PDF] jsPDF not loaded, falling back to printable HTML view.');
+        printInventoryReportFallback(action, { vault, components, custodianName, totalModels, totalUnits, availableUnits, lentUnits, deadUnits });
+        return;
+      }
+
+      // Landscape A4: 841.89 x 595.28 pt
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4'
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Top Header Banner (Midnight Obsidian #070a0e)
+      doc.setFillColor(7, 10, 14);
+      doc.rect(0, 0, pageWidth, 62, 'F');
+
+      // Aerodynamic Streamline Cyan Accent Bar (#00B4D8)
+      doc.setFillColor(0, 180, 216);
+      doc.rect(0, 62, pageWidth, 2.5, 'F');
+
+      // Title & Branding
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('COMPONENT VAULT  |  HARDWARE LAB CUSTODY LEDGER', 36, 28);
+
+      // Subtitle / Vault Name
+      doc.setTextColor(0, 180, 216);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      const vaultTitle = `${(vault.name || 'Hardware Lab').toUpperCase()}${vault.tagline ? ' — ' + vault.tagline : ''}`;
+      doc.text(vaultTitle, 36, 46);
+
+      // Metadata (Right aligned)
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      doc.setTextColor(203, 213, 225);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.text(`Generated: ${dateStr}`, pageWidth - 36, 28, { align: 'right' });
+      doc.text(`Lab Custodian: ${custodianName}`, pageWidth - 36, 44, { align: 'right' });
+
+      // KPI Summary Banner Box (Y = 74 to 112)
+      doc.setFillColor(18, 24, 36); // #121824
+      doc.roundedRect(36, 74, pageWidth - 72, 38, 4, 4, 'F');
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(36, 74, pageWidth - 72, 38, 4, 4, 'S');
+
+      // KPI Item Columns
+      const kpiItems = [
+        { label: 'COMPONENT MODELS', value: String(totalModels), color: [255, 255, 255] },
+        { label: 'TOTAL PHYSICAL UNITS', value: String(totalUnits), color: [255, 255, 255] },
+        { label: 'AVAILABLE IN STOCK', value: String(availableUnits), color: [0, 180, 216] },
+        { label: 'IN ACTIVE PROJECTS', value: String(lentUnits), color: [242, 159, 90] },
+        { label: 'DEAD / DEFECTIVE', value: String(deadUnits), color: deadUnits > 0 ? [255, 82, 82] : [142, 155, 174] }
+      ];
+
+      const kpiColWidth = (pageWidth - 72) / kpiItems.length;
+      kpiItems.forEach((kpi, idx) => {
+        const xPos = 36 + (idx * kpiColWidth) + (kpiColWidth / 2);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setTextColor(kpi.color[0], kpi.color[1], kpi.color[2]);
+        doc.text(kpi.value, xPos, 91, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(142, 155, 174);
+        doc.text(kpi.label, xPos, 103, { align: 'center' });
+
+        if (idx < kpiItems.length - 1) {
+          doc.setDrawColor(50, 65, 85);
+          doc.line(36 + (idx + 1) * kpiColWidth, 79, 36 + (idx + 1) * kpiColWidth, 107);
+        }
+      });
+
+      // Prepare Table Rows
+      const sortedComponents = [...components].sort((a, b) => {
+        const catCompare = (a.category || '').localeCompare(b.category || '');
+        if (catCompare !== 0) return catCompare;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      const tableRows = sortedComponents.map(c => {
+        const status = c.availableQty === 0 ? 'DEPLETED' : (c.availableQty <= 2 ? 'LOW STOCK' : 'IN STOCK');
+        return [
+          c.sku || '—',
+          c.name || 'Unnamed',
+          c.category || 'General',
+          c.locationBin || 'UNASSIGNED',
+          String(c.availableQty),
+          String(c.lentQty),
+          String(c.deadQty || 0),
+          String(c.totalQty),
+          status
+        ];
+      });
+
+      // AutoTable
+      doc.autoTable({
+        startY: 122,
+        margin: { left: 36, right: 36, bottom: 40 },
+        head: [['SKU / CODE', 'COMPONENT NAME', 'CATEGORY', 'BIN LOCATION', 'AVAIL', 'LENT', 'DEAD', 'TOTAL', 'STATUS']],
+        body: tableRows,
+        theme: 'grid',
+        styles: {
+          font: 'helvetica',
+          fontSize: 8,
+          cellPadding: 4.5,
+          overflow: 'linebreak',
+          lineColor: [226, 232, 240],
+          lineWidth: 0.5
+        },
+        headStyles: {
+          fillColor: [18, 24, 36], // #121824
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 8,
+          halign: 'left'
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        columnStyles: {
+          0: { cellWidth: 70, fontStyle: 'bold', textColor: [51, 65, 85] },
+          1: { cellWidth: 190, fontStyle: 'bold', textColor: [15, 23, 42] },
+          2: { cellWidth: 95 },
+          3: { cellWidth: 85 },
+          4: { cellWidth: 48, halign: 'center' },
+          5: { cellWidth: 48, halign: 'center' },
+          6: { cellWidth: 48, halign: 'center' },
+          7: { cellWidth: 55, halign: 'center', fontStyle: 'bold' },
+          8: { cellWidth: 80, halign: 'center' }
+        },
+        didParseCell: function(data) {
+          if (data.section === 'body') {
+            // Dead units
+            if (data.column.index === 6) {
+              const val = parseInt(data.cell.raw, 10) || 0;
+              if (val > 0) {
+                data.cell.styles.textColor = [217, 83, 79];
+                data.cell.styles.fontStyle = 'bold';
+              }
+            }
+            // Status column
+            if (data.column.index === 8) {
+              const val = data.cell.raw;
+              if (val === 'DEPLETED') {
+                data.cell.styles.textColor = [217, 83, 79];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val === 'LOW STOCK') {
+                data.cell.styles.textColor = [217, 138, 40];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val === 'IN STOCK') {
+                data.cell.styles.textColor = [41, 118, 133];
+                data.cell.styles.fontStyle = 'bold';
+              }
+            }
+          }
+        },
+        didDrawPage: function(data) {
+          // Footer
+          const totalPages = doc.internal.getNumberOfPages();
+          const currentPage = data.pageNumber;
+
+          doc.setDrawColor(203, 213, 225);
+          doc.setLineWidth(0.5);
+          doc.line(36, pageHeight - 26, pageWidth - 36, pageHeight - 26);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(142, 155, 174);
+          doc.text('Component Vault  •  Hardware Lab Custody System  •  Confidential Lab Audit Record', 36, pageHeight - 14);
+          doc.text(`Page ${currentPage} of ${totalPages}`, pageWidth - 36, pageHeight - 14, { align: 'right' });
+        }
+      });
+
+      // Output action
+      const cleanVaultName = (vault.name || 'Hardware_Lab').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `Component_Vault_Audit_Report_${cleanVaultName}_${now.toISOString().split('T')[0]}.pdf`;
+
+      if (action === 'download') {
+        doc.save(filename);
+      } else if (action === 'print') {
+        doc.autoPrint();
+        const blobUrl = doc.output('bloburl');
+        window.open(blobUrl, '_blank');
+      }
+    } catch (err) {
+      console.error('[PDF Generation Error]', err);
+      alert('Could not generate PDF directly: ' + err.message + '\nSwitching to printable document view.');
+      printInventoryReportFallback(action);
+    }
+  }
+
+  // --- Fallback Printable View ---
+  function printInventoryReportFallback(action, data) {
+    const vault = (data && data.vault) || window.componentStore.getActiveVault() || { name: 'Main Hardware Lab' };
+    const components = (data && data.components) || window.componentStore.getComponents() || [];
+    const custodian = (data && data.custodianName) || 'Lab Custodian';
+    const totalModels = components.length;
+    let totalUnits = 0, availUnits = 0, lentUnits = 0, deadUnits = 0;
+    components.forEach(c => {
+      totalUnits += (parseInt(c.totalQty, 10) || 0);
+      availUnits += (parseInt(c.availableQty, 10) || 0);
+      lentUnits += (parseInt(c.lentQty, 10) || 0);
+      deadUnits += (parseInt(c.deadQty, 10) || 0);
     });
 
-    el.resetDemoDataBtn.addEventListener('click', () => {
-      if (confirm('Restore the demo Streamline catalog and sample project loans?')) {
-        window.componentStore.resetToDefaults(true);
-        closeModal(el.backupModal);
-      }
-    });
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    if (!printWin) {
+      alert('Popup was blocked. Please allow popups to view or print the inventory audit report.');
+      return;
+    }
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Component Vault Audit Report - ${vault.name}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 24px; color: #0f172a; }
+    .header { background: #070a0e; color: #fff; padding: 18px 24px; border-radius: 8px; margin-bottom: 20px; border-bottom: 3px solid #00B4D8; }
+    .header h1 { margin: 0 0 6px 0; font-size: 1.25rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .header .meta { font-size: 0.82rem; color: #94a3b8; display: flex; justify-content: space-between; }
+    .kpis { display: flex; gap: 12px; margin-bottom: 20px; }
+    .kpi-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
+    .kpi-val { font-size: 1.3rem; font-weight: bold; color: #0f172a; }
+    .kpi-lbl { font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { background: #121824; color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; }
+    td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .text-center { text-align: center; }
+    .dead-val { color: #dc2626; font-weight: bold; }
+    .status-in { color: #0d9488; font-weight: 600; }
+    .status-low { color: #d97706; font-weight: 600; }
+    .status-dep { color: #dc2626; font-weight: 600; }
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom: 16px; display: flex; gap: 8px;">
+    <button onclick="window.print()" style="padding: 8px 16px; background: #00B4D8; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Print / Save as PDF</button>
+    <button onclick="window.close()" style="padding: 8px 16px; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+  </div>
+  <div class="header">
+    <h1>Component Vault &bull; Hardware Lab Custody Ledger</h1>
+    <div class="meta">
+      <span>Vault: <strong>${vault.name}</strong> ${vault.tagline ? '— ' + vault.tagline : ''}</span>
+      <span>Generated: ${new Date().toLocaleString()} &bull; Custodian: ${custodian}</span>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi-card"><div class="kpi-val">${totalModels}</div><div class="kpi-lbl">Component Models</div></div>
+    <div class="kpi-card"><div class="kpi-val">${totalUnits}</div><div class="kpi-lbl">Total Physical Units</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color: #0d9488;">${availUnits}</div><div class="kpi-lbl">Available Stock</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color: #d97706;">${lentUnits}</div><div class="kpi-lbl">In Active Projects</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color: #dc2626;">${deadUnits}</div><div class="kpi-lbl">Dead / Defective</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th>
+        <th>Component Name</th>
+        <th>Category</th>
+        <th>Bin Location</th>
+        <th class="text-center">Available</th>
+        <th class="text-center">Lent</th>
+        <th class="text-center">Dead</th>
+        <th class="text-center">Total</th>
+        <th class="text-center">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${components.map(c => {
+        const s = c.availableQty === 0 ? 'DEPLETED' : (c.availableQty <= 2 ? 'LOW STOCK' : 'IN STOCK');
+        const sClass = c.availableQty === 0 ? 'status-dep' : (c.availableQty <= 2 ? 'status-low' : 'status-in');
+        return `<tr>
+          <td><strong>${c.sku || '—'}</strong></td>
+          <td>${c.name}</td>
+          <td>${c.category || 'General'}</td>
+          <td>${c.locationBin || 'UNASSIGNED'}</td>
+          <td class="text-center">${c.availableQty}</td>
+          <td class="text-center">${c.lentQty}</td>
+          <td class="text-center ${c.deadQty > 0 ? 'dead-val' : ''}">${c.deadQty || 0}</td>
+          <td class="text-center"><strong>${c.totalQty}</strong></td>
+          <td class="text-center ${sClass}">${s}</td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>
+  <div style="margin-top: 24px; font-size: 0.75rem; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+    Component Vault &bull; Streamline Moderne Lab Custody System &bull; Confidential
+  </div>
+  <script>
+    if (${action === 'print'}) {
+      window.onload = function() { window.print(); };
+    }
+  </script>
+</body>
+</html>`;
+
+    printWin.document.open();
+    printWin.document.write(html);
+    printWin.document.close();
   }
 
   // --- Event Bindings ---

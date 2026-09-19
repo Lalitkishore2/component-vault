@@ -12,15 +12,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@200;300;400;500;600&family=Raleway:wght@200;300;400;500;600&family=Tenor+Sans&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/design-tokens.css?v=2.6">
-  <link rel="stylesheet" href="css/layout.css?v=2.6">
-  <link rel="stylesheet" href="css/components.css?v=2.6">
+  <link rel="stylesheet" href="css/design-tokens.css?v=2.7">
+  <link rel="stylesheet" href="css/layout.css?v=2.7">
+  <link rel="stylesheet" href="css/components.css?v=2.7">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
 
   <!-- Progressive Web App (PWA) Manifest & Mobile App Capabilities -->
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0b111a">
+  <meta name="theme-color" content="#070a0e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Component Vault">
@@ -63,8 +63,8 @@
       <!-- Streamline Aerodynamic Emblem from user SVGs -->
       <div class="login-brand">
         <div class="login-brand-logo" aria-label="Component Vault">
-          <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark">
-          <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light">
+          <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark">
+          <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light">
         </div>
         <h1 class="login-brand-title">Component Vault</h1>
         <p class="login-brand-tagline">Streamline Moderne Hardware Lab &amp; Project Custody Ledger</p>
@@ -121,8 +121,8 @@
         <div class="brand-section">
           <div class="brand-left">
             <div class="brand-logo" aria-label="Component Vault">
-              <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark" decoding="async">
-              <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light" decoding="async">
+              <img src="assets/black-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-dark" decoding="async">
+              <img src="assets/white-icon.svg" alt="Component Vault" class="brand-logo-img logo-img-light" decoding="async">
             </div>
             <div>
               <h1 class="brand-title">
@@ -267,8 +267,8 @@
       <div class="mobile-menu-header">
         <div style="display: flex; align-items: center; gap: 0.65rem;">
           <div class="brand-logo" style="width: 32px; height: 32px; border-radius: 8px;">
-            <img src="assets/logo-dark.svg" alt="Vault" class="brand-logo-img logo-img-dark">
-            <img src="assets/logo-light.svg" alt="Vault" class="brand-logo-img logo-img-light">
+            <img src="assets/black-icon.svg" alt="Vault" class="brand-logo-img logo-img-dark">
+            <img src="assets/white-icon.svg" alt="Vault" class="brand-logo-img logo-img-light">
           </div>
           <div class="mobile-menu-title">Vault &amp; Account Controls</div>
         </div>
@@ -333,7 +333,7 @@
             </span>
             <div>
               <div class="mobile-item-title">Backup &amp; Restore</div>
-              <div class="mobile-item-subtitle">Export JSON or restore backup</div>
+              <div class="mobile-item-subtitle">Export JSON, PDF ledger, or restore backup</div>
             </div>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -868,6 +868,30 @@
       <div class="modal-body">
         <div style="display: flex; flex-direction: column; gap: 1.25rem;">
           
+          <!-- PDF Inventory Ledger & Audit Export -->
+          <div style="background: var(--bg-subtle); padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-default);">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem;">
+              <div>
+                <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-teal)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  Export PDF Ledger &amp; Audit Report
+                </h4>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0;">Generate an executive hardware lab audit report with custody status, dead component metrics, SKU codes, and bin locations.</p>
+              </div>
+              <span class="badge badge-teal" style="font-size: 0.7rem; white-space: nowrap;">PDF Document</span>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem;">
+              <button type="button" id="downloadPdfExportBtn" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Download PDF Report</span>
+              </button>
+              <button type="button" id="printPdfReportBtn" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                <span>Print / Save as PDF</span>
+              </button>
+            </div>
+          </div>
+
           <div style="background: var(--bg-subtle); padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-default);">
             <h4 style="font-size: 0.95rem; margin-bottom: 0.35rem; color: var(--text-primary);">Export Database</h4>
             <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.85rem;">Download all components, images, project assignments, and activity history as a JSON backup file.</p>
@@ -1207,11 +1231,13 @@
   </div>
 
   <!-- Scripts -->
-  <script defer src="js/firebase-credentials.local.js?v=2.6" onerror="this.onerror=null;"></script>
-  <script defer src="js/firebase-config.js?v=2.6"></script>
-  <script defer src="js/sample-data.js?v=2.6"></script>
-  <script defer src="js/auth.js?v=2.6"></script>
-  <script defer src="js/store.js?v=2.6"></script>
-  <script defer src="js/app.js?v=2.6"></script>
+  <script defer src="js/firebase-credentials.local.js?v=2.7" onerror="this.onerror=null;"></script>
+  <script defer src="js/firebase-config.js?v=2.7"></script>
+  <script defer src="js/sample-data.js?v=2.7"></script>
+  <script defer src="js/auth.js?v=2.7"></script>
+  <script defer src="js/store.js?v=2.7"></script>
+  <script defer src="js/jspdf.umd.min.js?v=2.7"></script>
+  <script defer src="js/jspdf.plugin.autotable.min.js?v=2.7"></script>
+  <script defer src="js/app.js?v=2.7"></script>
 </body>
 </html>
