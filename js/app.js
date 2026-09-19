@@ -1721,6 +1721,36 @@
     renderVaultDropdown();
   }
 
+  // --- Create & Edit Hardware Vault Modal Handlers ---
+  function openCreateVault() {
+    if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
+    if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
+    closeMobileMenu();
+    if (el.createVaultNotice) el.createVaultNotice.style.display = 'none';
+    if (el.createVaultForm) el.createVaultForm.reset();
+    openModal(el.createVaultModal);
+    setTimeout(() => el.vaultNameInput && el.vaultNameInput.focus(), 80);
+  }
+
+  function openEditVaultModal(vaultId) {
+    if (!window.componentStore) return;
+    const vaults = window.componentStore.getUserVaults();
+    const vault = vaults.find(v => v.id === vaultId);
+    if (!vault) return;
+
+    if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
+    if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
+    closeMobileMenu();
+
+    if (el.editVaultNotice) el.editVaultNotice.style.display = 'none';
+    if (el.editVaultIdInput) el.editVaultIdInput.value = vault.id;
+    if (el.editVaultNameInput) el.editVaultNameInput.value = vault.name;
+    if (el.editVaultTaglineInput) el.editVaultTaglineInput.value = vault.tagline || '';
+
+    openModal(el.editVaultModal);
+    setTimeout(() => el.editVaultNameInput && el.editVaultNameInput.focus(), 80);
+  }
+
   function renderVaultDropdown() {
     if (!window.componentStore) return;
     const vaults = window.componentStore.getUserVaults();
@@ -1778,6 +1808,7 @@
     // Edit vault click handler
     document.querySelectorAll('[data-edit-vault-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const vaultId = btn.getAttribute('data-edit-vault-id');
         if (vaultId) openEditVaultModal(vaultId);
@@ -1787,6 +1818,7 @@
     // Delete vault click handler
     document.querySelectorAll('[data-delete-vault-id]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const vaultId = btn.getAttribute('data-delete-vault-id');
         if (!vaultId || !window.componentStore) return;
@@ -1827,37 +1859,6 @@
         if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
       }
     });
-
-    // Create New Vault Modal Triggers
-    const openCreateVault = () => {
-      if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
-      if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
-      closeMobileMenu();
-      if (el.createVaultNotice) el.createVaultNotice.style.display = 'none';
-      if (el.createVaultForm) el.createVaultForm.reset();
-      openModal(el.createVaultModal);
-      setTimeout(() => el.vaultNameInput && el.vaultNameInput.focus(), 80);
-    };
-
-    // Edit Vault Modal Trigger
-    const openEditVaultModal = (vaultId) => {
-      if (!window.componentStore) return;
-      const vaults = window.componentStore.getUserVaults();
-      const vault = vaults.find(v => v.id === vaultId);
-      if (!vault) return;
-
-      if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
-      if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
-      closeMobileMenu();
-
-      if (el.editVaultNotice) el.editVaultNotice.style.display = 'none';
-      if (el.editVaultIdInput) el.editVaultIdInput.value = vault.id;
-      if (el.editVaultNameInput) el.editVaultNameInput.value = vault.name;
-      if (el.editVaultTaglineInput) el.editVaultTaglineInput.value = vault.tagline || '';
-
-      openModal(el.editVaultModal);
-      setTimeout(() => el.editVaultNameInput && el.editVaultNameInput.focus(), 80);
-    };
 
     if (el.openNewVaultBtn) el.openNewVaultBtn.addEventListener('click', openCreateVault);
     if (el.mobileNewVaultBtn) el.mobileNewVaultBtn.addEventListener('click', openCreateVault);

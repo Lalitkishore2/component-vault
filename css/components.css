@@ -1536,42 +1536,6 @@ button.user-vault-action-btn.delete:hover {
   border-color: var(--accent-red) !important;
 }
 
-.user-vault-item-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-
-.user-vault-item-name {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-vault-row.active .user-vault-item-name,
-.user-vault-item.active .user-vault-item-name {
-  color: var(--accent-teal);
-  font-weight: 600;
-}
-
-.user-vault-item-tag {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-vault-item-check {
-  color: var(--accent-teal);
-  margin-left: 0.5rem;
-  flex-shrink: 0;
-}
-
 
 /* =========================================================================
    Streamline Moderne Fullscreen Login Portal (Strict Gate)
