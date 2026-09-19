@@ -383,6 +383,72 @@
     }
   }
 
+  // --- Toast Notification System ---
+  function showToast(message, type = 'info', duration = 3200) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'toast-container';
+      container.setAttribute('role', 'region');
+      container.setAttribute('aria-label', 'Notifications');
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+
+    let iconSvg = '';
+    if (type === 'error' || message.includes('⚠️') || message.includes('Error') || message.includes('Failed')) {
+      iconSvg = `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+    } else {
+      iconSvg = `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+    }
+
+    toast.innerHTML = `
+      ${iconSvg}
+      <span class="toast-message">${escapeHTML(message)}</span>
+      <button type="button" class="toast-close" aria-label="Dismiss notification">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    `;
+
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => removeToast(toast));
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+
+    const timer = setTimeout(() => {
+      removeToast(toast);
+    }, duration);
+
+    function removeToast(targetEl) {
+      clearTimeout(timer);
+      targetEl.classList.remove('show');
+      targetEl.classList.add('hide');
+      setTimeout(() => {
+        if (targetEl.parentNode) targetEl.parentNode.removeChild(targetEl);
+      }, 300);
+    }
+  }
+
+  function highlightComponent(id) {
+    setTimeout(() => {
+      const target = document.querySelector(`[data-component-id="${id}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('highlight-pulse');
+        setTimeout(() => target.classList.remove('highlight-pulse'), 2500);
+      }
+    }, 150);
+  }
+
   function setupModalDismiss() {
     document.querySelectorAll('.modal-backdrop').forEach(modal => {
       modal.addEventListener('click', e => {
@@ -680,6 +746,8 @@
         items = items.filter(item => item.lentQty > 0);
       } else if (state.statusFilter === 'depleted') {
         items = items.filter(item => item.availableQty === 0);
+      } else if (state.statusFilter === 'dead') {
+        items = items.filter(item => (item.deadQty || 0) > 0);
       } else if (state.statusFilter === 'overdue') {
         items = items.filter(item => item.hasOverdue);
       }
@@ -933,6 +1001,8 @@
 
         if (confirm(warning)) {
           window.componentStore.deleteComponent(id);
+          renderAll();
+          showToast(`Deleted "${item.name}" from inventory.`);
         }
       });
     });
@@ -1145,12 +1215,15 @@
   // --- Add / Edit Component Handlers ---
   function openNewComponentModal() {
     state.editingComponentId = null;
+    state.pendingImageBase64 = '';
     el.compModalTitle.innerHTML = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       Add New Component
     `;
     el.componentForm.reset();
     el.editComponentId.value = '';
+    if (el.imageFileInput) el.imageFileInput.value = '';
+    if (el.imageUrlInput) el.imageUrlInput.value = '';
     if (el.compDeadQty) el.compDeadQty.value = 0;
     setImagePreviewState('');
     if (el.editCustodySection) el.editCustodySection.style.display = 'none';
@@ -1285,7 +1358,10 @@
     el.imageDropArea.addEventListener('click', (e) => {
       // Avoid re-triggering if clicked on inner buttons
       if (e.target.closest('#pasteImageBtn') || e.target.closest('#clearImageBtn') || e.target.closest('#imageUrlInput')) return;
-      el.imageFileInput.click();
+      if (el.imageFileInput) {
+        el.imageFileInput.value = '';
+        el.imageFileInput.click();
+      }
     });
 
     el.imageFileInput.addEventListener('change', e => {
@@ -1311,17 +1387,25 @@
       }
     });
 
-    el.imageUrlInput.addEventListener('input', () => {
-      const url = el.imageUrlInput.value.trim();
+    const handleUrlInput = () => {
+      const url = el.imageUrlInput ? el.imageUrlInput.value.trim() : '';
       if (url) {
         setImagePreviewState(url);
+      } else if (state.pendingImageBase64 && state.pendingImageBase64.startsWith('http')) {
+        setImagePreviewState('');
       }
-    });
+    };
+    if (el.imageUrlInput) {
+      el.imageUrlInput.addEventListener('input', handleUrlInput);
+      el.imageUrlInput.addEventListener('change', handleUrlInput);
+      el.imageUrlInput.addEventListener('blur', handleUrlInput);
+    }
 
     el.clearImageBtn.addEventListener('click', e => {
       e.stopPropagation();
       setImagePreviewState('');
-      el.imageFileInput.value = '';
+      if (el.imageFileInput) el.imageFileInput.value = '';
+      if (el.imageUrlInput) el.imageUrlInput.value = '';
     });
 
     // Paste from Clipboard Button handler
@@ -1446,11 +1530,41 @@
   }
 
   function handleImageFile(file) {
+    if (!file) return;
+    if (el.imageDropArea) el.imageDropArea.classList.add('loading');
+    if (el.saveComponentBtn) {
+      el.saveComponentBtn.disabled = true;
+      el.saveComponentBtn.setAttribute('data-original-text', el.saveComponentBtn.textContent);
+      el.saveComponentBtn.textContent = 'Processing Image...';
+    }
+
     const reader = new FileReader();
     reader.onload = async ev => {
-      const raw = ev.target.result;
-      const compressed = await compressImage(raw, 640, 640, 0.78);
-      setImagePreviewState(compressed);
+      try {
+        const raw = ev.target.result;
+        const compressed = await compressImage(raw, 640, 640, 0.78);
+        setImagePreviewState(compressed);
+        flashDropAreaSuccess();
+      } catch (err) {
+        console.error('Error processing image:', err);
+        showToast('Error processing image file');
+      } finally {
+        if (el.imageDropArea) el.imageDropArea.classList.remove('loading');
+        if (el.saveComponentBtn) {
+          el.saveComponentBtn.disabled = false;
+          el.saveComponentBtn.textContent = el.saveComponentBtn.getAttribute('data-original-text') || 'Save Component';
+        }
+        if (el.imageFileInput) el.imageFileInput.value = '';
+      }
+    };
+    reader.onerror = () => {
+      if (el.imageDropArea) el.imageDropArea.classList.remove('loading');
+      if (el.saveComponentBtn) {
+        el.saveComponentBtn.disabled = false;
+        el.saveComponentBtn.textContent = el.saveComponentBtn.getAttribute('data-original-text') || 'Save Component';
+      }
+      if (el.imageFileInput) el.imageFileInput.value = '';
+      showToast('Failed to read image file');
     };
     reader.readAsDataURL(file);
   }
@@ -2273,7 +2387,19 @@
     // Save Component Form
     el.componentForm.addEventListener('submit', async e => {
       e.preventDefault();
+
+      // Prevent submitting while image is still compressing
+      if (el.imageDropArea && el.imageDropArea.classList.contains('loading')) {
+        showToast('Please wait for image processing to complete...');
+        return;
+      }
+
       let finalImage = state.pendingImageBase64;
+      const inputUrl = el.imageUrlInput ? el.imageUrlInput.value.trim() : '';
+      if (inputUrl && (!finalImage || inputUrl !== finalImage)) {
+        finalImage = inputUrl;
+      }
+
       if (finalImage && finalImage.startsWith('data:image') && finalImage.length > 80000) {
         finalImage = await compressImage(finalImage, 640, 640, 0.78);
       }
@@ -2286,8 +2412,10 @@
         return;
       }
 
-      if (state.editingComponentId) {
-        const existing = window.componentStore.getComponentById(state.editingComponentId);
+      const editId = state.editingComponentId || (el.editComponentId && el.editComponentId.value ? el.editComponentId.value.trim() : null);
+
+      if (editId) {
+        const existing = window.componentStore.getComponentById(editId);
         if (existing && deadQtyVal + (existing.lentQty || 0) > totalQtyVal) {
           alert(`Cannot set ${deadQtyVal} dead units: ${existing.lentQty} units are currently assigned to active projects (total count: ${totalQtyVal}). Return or adjust project loans first.`);
           return;
@@ -2306,12 +2434,54 @@
         image: finalImage
       };
 
-      if (state.editingComponentId) {
-        window.componentStore.updateComponent(state.editingComponentId, payload);
+      if (editId) {
+        const updated = window.componentStore.updateComponent(editId, payload);
+        if (!updated) {
+          console.warn('Component not found for edit ID:', editId, 'Creating as new component...');
+          const newComp = window.componentStore.addComponent(payload);
+          highlightComponent(newComp.id);
+        } else {
+          highlightComponent(editId);
+        }
+        showToast(`Updated "${payload.name}" successfully!`);
       } else {
-        window.componentStore.addComponent(payload);
+        const newComp = window.componentStore.addComponent(payload);
+        showToast(`Added "${payload.name}" to inventory!`);
+
+        // Ensure newly added component is visible:
+        if (state.currentTab !== 'inventory') {
+          setTab('inventory', false);
+        }
+        if (state.statusFilter === 'available' && newComp.availableQty === 0) {
+          state.statusFilter = 'all';
+          if (el.filterStatus) el.filterStatus.value = 'all';
+          updateFilterActiveBadge();
+        }
+        if (state.categoryFilter !== 'all' && state.categoryFilter !== newComp.category) {
+          state.categoryFilter = 'all';
+          if (el.filterCategory) el.filterCategory.value = 'all';
+          updateFilterActiveBadge();
+        }
+        if (state.searchQuery) {
+          const q = state.searchQuery.toLowerCase();
+          const inName = newComp.name.toLowerCase().includes(q);
+          const inSku = (newComp.sku || '').toLowerCase().includes(q);
+          if (!inName && !inSku) {
+            state.searchQuery = '';
+            if (el.searchInput) el.searchInput.value = '';
+            if (el.topSearchInput) el.topSearchInput.value = '';
+            if (el.searchClearBtn) el.searchClearBtn.classList.remove('visible');
+            if (el.topSearchClearBtn) el.topSearchClearBtn.style.display = 'none';
+          }
+        }
+        highlightComponent(newComp.id);
       }
 
+      state.editingComponentId = null;
+      state.pendingImageBase64 = '';
+      if (el.editComponentId) el.editComponentId.value = '';
+      el.componentForm.reset();
+      renderAll();
       closeModal(el.componentModal);
     });
 
@@ -2335,6 +2505,8 @@
 
       try {
         window.componentStore.lendComponent(compId, loanData);
+        renderAll();
+        showToast('Component assigned to project successfully!');
         closeModal(el.lendModal);
       } catch (err) {
         alert(err.message);
@@ -2820,22 +2992,24 @@
   function sanitizeImageUrl(url) {
     if (!url || typeof url !== 'string') return getDefaultPlaceholderImg();
     const trimmed = url.trim();
-    // Allow http and https URLs
-    if (/^https?:\/\//i.test(trimmed)) {
+    // Allow http, https, and blob URLs
+    if (/^https?:\/\//i.test(trimmed) || /^blob:/i.test(trimmed)) {
       return trimmed;
     }
-    // Allow only safe raster base64 images (PNG, JPEG, WEBP, GIF)
-    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
-      return trimmed;
+    // Clean internal whitespace and newlines from data URIs
+    const cleanData = trimmed.replace(/\s+/g, '');
+    // Allow raster base64 images (PNG, JPEG, WEBP, GIF, AVIF, BMP)
+    if (/^data:image\/(png|jpeg|jpg|webp|gif|avif|bmp);base64,[A-Za-z0-9+/=]+$/i.test(cleanData)) {
+      return cleanData;
     }
     // Only allow safe static default placeholder SVG (no scripts, no on* event handlers, no foreignObject)
-    if (trimmed.startsWith('data:image/svg+xml') && 
-        !trimmed.toLowerCase().includes('<script') && 
-        !trimmed.toLowerCase().includes('javascript:') &&
-        !trimmed.toLowerCase().includes('onload') &&
-        !trimmed.toLowerCase().includes('onerror') &&
-        !trimmed.toLowerCase().includes('foreignobject')) {
-      return trimmed;
+    if (cleanData.startsWith('data:image/svg+xml') && 
+        !cleanData.toLowerCase().includes('<script') && 
+        !cleanData.toLowerCase().includes('javascript:') &&
+        !cleanData.toLowerCase().includes('onload') &&
+        !cleanData.toLowerCase().includes('onerror') &&
+        !cleanData.toLowerCase().includes('foreignobject')) {
+      return cleanData;
     }
     return getDefaultPlaceholderImg();
   }
