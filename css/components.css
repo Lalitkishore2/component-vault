@@ -1555,6 +1555,15 @@ button.user-vault-action-btn {
   box-shadow: none !important;
   appearance: none !important;
   -webkit-appearance: none !important;
+  position: relative;
+  z-index: 2;
+  touch-action: manipulation;
+}
+
+.user-vault-action-btn svg,
+.user-vault-action-btn path,
+.user-vault-action-btn polyline {
+  pointer-events: none;
 }
 
 button.user-vault-action-btn:hover {

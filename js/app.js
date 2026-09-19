@@ -320,7 +320,11 @@
 
     if (pushHistory) {
       const hash = '#' + modalIdToHash(modal.id);
-      history.pushState({ type: 'modal', id: modal.id }, '', hash);
+      if (history.state && history.state.type === 'menu') {
+        history.replaceState({ type: 'modal', id: modal.id }, '', hash);
+      } else {
+        history.pushState({ type: 'modal', id: modal.id }, '', hash);
+      }
     }
   }
 
@@ -1503,15 +1507,15 @@
 
     // PDF Download Ledger Report
     if (el.downloadPdfExportBtn) {
-      el.downloadPdfExportBtn.addEventListener('click', () => {
-        generateInventoryPdf('download');
+      el.downloadPdfExportBtn.addEventListener('click', async () => {
+        await generateInventoryPdf('download');
       });
     }
 
     // Print / Save as PDF
     if (el.printPdfReportBtn) {
-      el.printPdfReportBtn.addEventListener('click', () => {
-        generateInventoryPdf('print');
+      el.printPdfReportBtn.addEventListener('click', async () => {
+        await generateInventoryPdf('print');
       });
     }
 
@@ -1566,8 +1570,63 @@
     }
   }
 
+  // --- PDF Component Image Rasterizer ---
+  function prepareImageForPdf(imgSource, size = 64, timeoutMs = 1500) {
+    if (!imgSource || typeof imgSource !== 'string') return Promise.resolve(null);
+    return new Promise((resolve) => {
+      let resolved = false;
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          resolve(null);
+        }
+      }, timeoutMs);
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timer);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+
+          // Clean white background for crisp table contrast
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, size, size);
+
+          // Calculate aspect fit dimensions
+          const w = img.naturalWidth || img.width || size;
+          const h = img.naturalHeight || img.height || size;
+          const scale = Math.min((size - 4) / w, (size - 4) / h);
+          const drawW = w * scale;
+          const drawH = h * scale;
+          const drawX = (size - drawW) / 2;
+          const drawY = (size - drawH) / 2;
+
+          ctx.drawImage(img, drawX, drawY, drawW, drawH);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (err) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          resolve(null);
+        }
+      };
+      img.src = imgSource;
+    });
+  }
+
   // --- PDF Inventory Ledger & Audit Generation ---
-  function generateInventoryPdf(action = 'download') {
+  async function generateInventoryPdf(action = 'download') {
     try {
       const vault = window.componentStore.getActiveVault() || { name: 'Main Hardware Lab', tagline: '' };
       const components = window.componentStore.getComponents() || [];
@@ -1678,9 +1737,15 @@
         return (a.name || '').localeCompare(b.name || '');
       });
 
+      // Preload & rasterize all component images to clean PNG data URLs
+      const preparedImages = await Promise.all(
+        sortedComponents.map(c => prepareImageForPdf(c.image, 64))
+      );
+
       const tableRows = sortedComponents.map(c => {
         const status = c.availableQty === 0 ? 'DEPLETED' : (c.availableQty <= 2 ? 'LOW STOCK' : 'IN STOCK');
         return [
+          '', // Column 0: Photo thumbnail (drawn via didDrawCell)
           c.sku || '—',
           c.name || 'Unnamed',
           c.category || 'General',
@@ -1697,50 +1762,55 @@
       doc.autoTable({
         startY: 122,
         margin: { left: 36, right: 36, bottom: 40 },
-        head: [['SKU / CODE', 'COMPONENT NAME', 'CATEGORY', 'BIN LOCATION', 'AVAIL', 'LENT', 'DEAD', 'TOTAL', 'STATUS']],
+        head: [['PHOTO', 'SKU / CODE', 'COMPONENT NAME', 'CATEGORY', 'BIN LOCATION', 'AVAIL', 'LENT', 'DEAD', 'TOTAL', 'STATUS']],
         body: tableRows,
         theme: 'grid',
         styles: {
           font: 'helvetica',
           fontSize: 8,
-          cellPadding: 4.5,
+          cellPadding: 4,
           overflow: 'linebreak',
           lineColor: [226, 232, 240],
-          lineWidth: 0.5
+          lineWidth: 0.5,
+          minCellHeight: 26,
+          valign: 'middle'
         },
         headStyles: {
           fillColor: [18, 24, 36], // #121824
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 8,
-          halign: 'left'
+          halign: 'left',
+          valign: 'middle',
+          minCellHeight: 20
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252]
         },
         columnStyles: {
-          0: { cellWidth: 70, fontStyle: 'bold', textColor: [51, 65, 85] },
-          1: { cellWidth: 190, fontStyle: 'bold', textColor: [15, 23, 42] },
-          2: { cellWidth: 95 },
-          3: { cellWidth: 85 },
-          4: { cellWidth: 48, halign: 'center' },
-          5: { cellWidth: 48, halign: 'center' },
-          6: { cellWidth: 48, halign: 'center' },
-          7: { cellWidth: 55, halign: 'center', fontStyle: 'bold' },
-          8: { cellWidth: 80, halign: 'center' }
+          0: { cellWidth: 38, halign: 'center', minCellHeight: 26 },
+          1: { cellWidth: 70, fontStyle: 'bold', textColor: [51, 65, 85] },
+          2: { cellWidth: 178, fontStyle: 'bold', textColor: [15, 23, 42] },
+          3: { cellWidth: 92 },
+          4: { cellWidth: 76 },
+          5: { cellWidth: 44, halign: 'center' },
+          6: { cellWidth: 44, halign: 'center' },
+          7: { cellWidth: 44, halign: 'center' },
+          8: { cellWidth: 50, halign: 'center', fontStyle: 'bold' },
+          9: { cellWidth: 76, halign: 'center' }
         },
         didParseCell: function(data) {
           if (data.section === 'body') {
-            // Dead units
-            if (data.column.index === 6) {
+            // Dead units (column 7)
+            if (data.column.index === 7) {
               const val = parseInt(data.cell.raw, 10) || 0;
               if (val > 0) {
                 data.cell.styles.textColor = [217, 83, 79];
                 data.cell.styles.fontStyle = 'bold';
               }
             }
-            // Status column
-            if (data.column.index === 8) {
+            // Status column (column 9)
+            if (data.column.index === 9) {
               const val = data.cell.raw;
               if (val === 'DEPLETED') {
                 data.cell.styles.textColor = [217, 83, 79];
@@ -1752,6 +1822,25 @@
                 data.cell.styles.textColor = [24, 24, 27];
                 data.cell.styles.fontStyle = 'bold';
               }
+            }
+          }
+        },
+        didDrawCell: function(data) {
+          if (data.column.index === 0 && data.section === 'body') {
+            const compImage = preparedImages[data.row.index];
+            if (compImage) {
+              try {
+                const imgSize = 20; // 20 pt square thumbnail
+                const x = data.cell.x + (data.cell.width - imgSize) / 2;
+                const y = data.cell.y + (data.cell.height - imgSize) / 2;
+                doc.addImage(compImage, 'PNG', x, y, imgSize, imgSize);
+              } catch (e) {
+                console.warn('[PDF Table Image Draw]', e);
+              }
+            } else {
+              doc.setFontSize(8);
+              doc.setTextColor(180, 190, 205);
+              doc.text('—', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 3, { align: 'center' });
             }
           }
         },
@@ -1826,7 +1915,7 @@
     .kpi-lbl { font-size: 0.7rem; color: #64748b; text-transform: uppercase; margin-top: 4px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     th { background: #121824; color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; }
-    td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
     tr:nth-child(even) td { background: #f8fafc; }
     .text-center { text-align: center; }
     .dead-val { color: #dc2626; font-weight: bold; }
@@ -1861,6 +1950,7 @@
   <table>
     <thead>
       <tr>
+        <th style="width: 44px; text-align: center;">Photo</th>
         <th>SKU</th>
         <th>Component Name</th>
         <th>Category</th>
@@ -1876,7 +1966,11 @@
       ${components.map(c => {
         const s = c.availableQty === 0 ? 'DEPLETED' : (c.availableQty <= 2 ? 'LOW STOCK' : 'IN STOCK');
         const sClass = c.availableQty === 0 ? 'status-dep' : (c.availableQty <= 2 ? 'status-low' : 'status-in');
+        const imgHtml = c.image 
+          ? `<img src="${c.image}" alt="" style="width: 28px; height: 28px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background: #ffffff; display: block; margin: 0 auto;">` 
+          : `<span style="color: #94a3b8; font-size: 0.8rem;">—</span>`;
         return `<tr>
+          <td style="text-align: center; vertical-align: middle; padding: 3px;">${imgHtml}</td>
           <td><strong>${c.sku || '—'}</strong></td>
           <td>${c.name}</td>
           <td>${c.category || 'General'}</td>
@@ -1984,7 +2078,7 @@
 
     if (el.mobileBackupBtn) {
       el.mobileBackupBtn.addEventListener('click', () => {
-        closeMobileMenu();
+        closeMobileMenu(false);
         openModal(el.backupModal);
       });
     }
@@ -2290,7 +2384,7 @@
   function openCreateVault() {
     if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
     if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
-    closeMobileMenu();
+    closeMobileMenu(false);
     if (el.createVaultNotice) el.createVaultNotice.style.display = 'none';
     if (el.createVaultForm) el.createVaultForm.reset();
     openModal(el.createVaultModal);
@@ -2305,7 +2399,7 @@
 
     if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
     if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
-    closeMobileMenu();
+    closeMobileMenu(false);
 
     if (el.editVaultNotice) el.editVaultNotice.style.display = 'none';
     if (el.editVaultIdInput) el.editVaultIdInput.value = vault.id;
@@ -2324,21 +2418,21 @@
     const html = vaults.map(v => {
       const isActive = v.id === activeId;
       return `
-        <div class="user-vault-item ${isActive ? 'active' : ''}" data-switch-vault-id="${v.id}" role="button" tabindex="0" title="Switch to ${escapeHTML(v.name)}">
-          <div class="user-vault-item-info">
+        <div class="user-vault-item ${isActive ? 'active' : ''}">
+          <div class="user-vault-item-info" data-switch-vault-id="${v.id}" role="button" tabindex="0" title="Switch to ${escapeHTML(v.name)}">
             <div class="user-vault-item-name">${escapeHTML(v.name)}</div>
             ${v.tagline ? `<div class="user-vault-item-tag">${escapeHTML(v.tagline)}</div>` : ''}
           </div>
           <div class="user-vault-item-actions">
             ${isActive ? `
-              <svg class="user-vault-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg class="user-vault-item-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
             ` : ''}
             <button type="button" class="user-vault-action-btn edit" data-edit-vault-id="${v.id}" title="Edit Vault Name & Tagline" aria-label="Edit ${escapeHTML(v.name)}">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </button>
             ${vaults.length > 1 ? `
               <button type="button" class="user-vault-action-btn delete" data-delete-vault-id="${v.id}" title="Delete Vault" aria-label="Delete ${escapeHTML(v.name)}">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             ` : ''}
           </div>
@@ -2349,13 +2443,13 @@
     if (el.userVaultsList) el.userVaultsList.innerHTML = html;
     if (el.mobileUserVaultsList) el.mobileUserVaultsList.innerHTML = html;
 
-    // Switch vault click handler (clicking the row)
-    document.querySelectorAll('[data-switch-vault-id]').forEach(row => {
-      row.addEventListener('click', async (e) => {
-        if (e.target.closest('[data-edit-vault-id]') || e.target.closest('[data-delete-vault-id]')) {
+    // Switch vault click handler (clicking the item info)
+    document.querySelectorAll('[data-switch-vault-id]').forEach(elem => {
+      elem.addEventListener('click', async (e) => {
+        if (e.target.closest('.user-vault-item-actions') || e.target.closest('[data-edit-vault-id]') || e.target.closest('[data-delete-vault-id]')) {
           return;
         }
-        const targetId = row.getAttribute('data-switch-vault-id');
+        const targetId = elem.getAttribute('data-switch-vault-id');
         if (targetId && window.componentStore) {
           await window.componentStore.switchVault(targetId);
           const active = window.componentStore.getActiveVault();
@@ -2372,19 +2466,23 @@
 
     // Edit vault click handler
     document.querySelectorAll('[data-edit-vault-id]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      const handleEdit = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         const vaultId = btn.getAttribute('data-edit-vault-id');
         if (vaultId) openEditVaultModal(vaultId);
-      });
+      };
+      btn.addEventListener('click', handleEdit);
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation());
     });
 
     // Delete vault click handler
     document.querySelectorAll('[data-delete-vault-id]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      const handleDelete = async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         const vaultId = btn.getAttribute('data-delete-vault-id');
         if (!vaultId || !window.componentStore) return;
         const vaults = window.componentStore.getUserVaults();
@@ -2402,7 +2500,9 @@
             alert(err.message);
           }
         }
-      });
+      };
+      btn.addEventListener('click', handleDelete);
+      btn.addEventListener('pointerdown', (e) => e.stopPropagation());
     });
   }
 
@@ -2865,7 +2965,7 @@
         if (installBanner) installBanner.style.display = 'none';
         closeMobileMenu();
       } else if (isIos()) {
-        closeMobileMenu();
+        closeMobileMenu(false);
         if (iosInstallModal) openModal(iosInstallModal);
       } else {
         alert('To install Component Vault on your phone:\n\n1. Open your browser menu (⋮ or ⋯)\n2. Tap "Install App" or "Add to Home screen"');
