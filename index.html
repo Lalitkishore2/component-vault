@@ -671,6 +671,16 @@
               <input type="number" id="compTotalQty" class="form-input" min="1" value="1" required>
             </div>
             <div class="form-group">
+              <label for="compDeadQty" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>Dead / Defective Units</span>
+                <span class="badge-optional" style="color: var(--accent-red); background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.25);">Damaged</span>
+              </label>
+              <input type="number" id="compDeadQty" class="form-input" min="0" value="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
               <label for="compTags" class="form-label">Tags (comma separated)</label>
               <input type="text" id="compTags" class="form-input" placeholder="i2c, 3.3v, robotics">
             </div>
@@ -932,6 +942,44 @@
     </div>
   </div>
 
+  <!-- Modal 5b: Edit Hardware Vault Modal -->
+  <div id="editVaultModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="editVaultModalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h2 id="editVaultModalTitle" class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Edit Hardware Vault
+        </h2>
+        <button type="button" class="modal-close-btn" data-close-modal="editVaultModal" aria-label="Close dialog">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="editVaultForm">
+        <div class="modal-body">
+          <input type="hidden" id="editVaultIdInput" value="">
+
+          <div id="editVaultNotice" class="auth-notice-banner" style="display: none;"></div>
+
+          <div class="form-group">
+            <label for="editVaultNameInput" class="form-label">Vault Name *</label>
+            <input type="text" id="editVaultNameInput" class="form-input" required placeholder="e.g. Robotics Lab, IoT Bench" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="editVaultTaglineInput" class="form-label">Tagline / Location <span class="badge-optional">Optional</span></label>
+            <input type="text" id="editVaultTaglineInput" class="form-input" placeholder="e.g. Room 302, Bench B" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; gap: 0.75rem; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid var(--border-default);">
+          <button type="button" class="btn btn-secondary" data-close-modal="editVaultModal">Cancel</button>
+          <button type="submit" id="submitEditVaultBtn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal 6: Cloud Database & Firebase Configuration Modal -->
   <div id="cloudConfigModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cloudConfigTitle">
     <div class="modal-dialog">
@@ -1156,11 +1204,11 @@
   </div>
 
   <!-- Scripts -->
-  <script defer src="js/firebase-credentials.local.js?v=2.2" onerror="this.onerror=null;"></script>
-  <script defer src="js/firebase-config.js?v=2.2"></script>
-  <script defer src="js/sample-data.js?v=2.2"></script>
-  <script defer src="js/auth.js?v=2.2"></script>
-  <script defer src="js/store.js?v=2.2"></script>
-  <script defer src="js/app.js?v=2.2"></script>
+  <script defer src="js/firebase-credentials.local.js?v=2.3" onerror="this.onerror=null;"></script>
+  <script defer src="js/firebase-config.js?v=2.3"></script>
+  <script defer src="js/sample-data.js?v=2.3"></script>
+  <script defer src="js/auth.js?v=2.3"></script>
+  <script defer src="js/store.js?v=2.3"></script>
+  <script defer src="js/app.js?v=2.3"></script>
 </body>
 </html>

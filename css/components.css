@@ -452,6 +452,29 @@ svg {
   transition: width 0.3s ease;
 }
 
+.stock-bar-fill-dead {
+  background: linear-gradient(90deg, #ff5252 0%, #d32f2f 100%);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.stock-dead-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  background: rgba(255, 82, 82, 0.12);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: var(--radius-full);
+  color: #ff5252;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 /* Borrower & Project Section in Card */
 .card-loans-section {
   display: flex;
@@ -1427,6 +1450,87 @@ svg {
   border-left: 3px solid var(--accent-teal);
 }
 
+.user-vault-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  padding: 0.12rem 0.25rem 0.12rem 0;
+}
+
+.user-vault-row:hover {
+  background: var(--bg-subtle);
+}
+
+.user-vault-row.active {
+  background: rgba(61, 123, 138, 0.18);
+  border-left: 3px solid var(--accent-teal);
+}
+
+.user-vault-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.65rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.user-vault-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-right: 0.4rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity var(--transition-fast);
+}
+
+.user-vault-row:hover .user-vault-actions {
+  opacity: 1;
+}
+
+.user-vault-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.user-vault-action-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.user-vault-action-btn.edit:hover {
+  color: var(--accent-teal);
+  border-color: var(--accent-teal);
+}
+
+.user-vault-action-btn.delete:hover {
+  color: var(--accent-red);
+  border-color: var(--accent-red);
+}
+
 .user-vault-item-info {
   display: flex;
   flex-direction: column;
@@ -1443,6 +1547,7 @@ svg {
   text-overflow: ellipsis;
 }
 
+.user-vault-row.active .user-vault-item-name,
 .user-vault-item.active .user-vault-item-name {
   color: var(--accent-teal);
   font-weight: 600;

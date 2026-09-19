@@ -276,6 +276,24 @@ class ComponentStore {
     return newVault;
   }
 
+  updateVault(vaultId, { name, tagline = '' }) {
+    const cleanName = (name || '').trim();
+    if (!cleanName) throw new Error('Vault name is required.');
+
+    const vaults = this.getUserVaults();
+    const vault = vaults.find(v => v.id === vaultId);
+    if (!vault) throw new Error('Vault not found.');
+
+    vault.name = cleanName;
+    vault.tagline = (tagline || '').trim();
+    vault.updatedAt = new Date().toISOString();
+
+    this.saveUserVaults(vaults);
+    this.broadcastUpdate();
+    this.notify();
+    return vault;
+  }
+
   deleteVault(vaultId) {
     const vaults = this.getUserVaults();
     if (vaults.length <= 1) {
@@ -285,6 +303,14 @@ class ComponentStore {
     const filtered = vaults.filter(v => v.id !== vaultId);
     this.saveUserVaults(filtered);
     localStorage.removeItem(`CV_VAULT_DATA_${this.userId}_${vaultId}`);
+
+    // Asynchronously delete the Firestore document for this deleted vault
+    if (window.cloudDb && window.cloudDb.firestore) {
+      try {
+        const cleanDocId = `${this.userId}_${vaultId}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+        window.cloudDb.firestore.collection('component_vaults').doc(cleanDocId).delete().catch(() => {});
+      } catch (e) {}
+    }
 
     if (this.getActiveVaultId() === vaultId) {
       localStorage.setItem(this.getActiveVaultKey(), filtered[0].id);
@@ -530,20 +556,22 @@ class ComponentStore {
     const activeLoans = (item.loans || []).filter(l => l.status === 'active');
     const lentQty = activeLoans.reduce((sum, l) => sum + (Number(l.quantity) || 1), 0);
     const totalQty = Math.max(0, Number(item.totalQty) || 0);
-    const availableQty = Math.max(0, totalQty - lentQty);
+    const deadQty = Math.max(0, Math.min(Number(item.deadQty) || 0, totalQty));
+    const availableQty = Math.max(0, totalQty - lentQty - deadQty);
     const hasOverdue = activeLoans.some(l => l.returnDueDate && l.returnDueDate < today);
 
     let stockStatus = 'available'; // all units available
     if (availableQty === 0 && totalQty > 0) {
       stockStatus = 'depleted'; // 0 available
-    } else if (lentQty > 0) {
-      stockStatus = 'partial'; // partially lent
+    } else if (lentQty > 0 || deadQty > 0) {
+      stockStatus = 'partial'; // partially lent or damaged
     }
 
     return {
       ...item,
       activeLoans,
       lentQty,
+      deadQty,
       availableQty,
       stockStatus,
       hasOverdue
@@ -561,13 +589,17 @@ class ComponentStore {
 
   addComponent(data) {
     const id = 'comp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+    const totalQty = Math.max(1, parseInt(data.totalQty, 10) || 1);
+    const deadQty = Math.max(0, Math.min(totalQty, parseInt(data.deadQty, 10) || 0));
+
     const newComponent = {
       id,
       name: data.name.trim(),
       sku: (data.sku || '').trim() || ('SKU-' + Math.floor(1000 + Math.random() * 9000)),
       category: data.category || 'General',
       locationBin: (data.locationBin || 'UNASSIGNED').trim().toUpperCase(),
-      totalQty: Math.max(1, parseInt(data.totalQty, 10) || 1),
+      totalQty,
+      deadQty,
       specs: (data.specs || '').trim(),
       tags: Array.isArray(data.tags) ? data.tags : (data.tags || '').split(',').map(t => t.trim()).filter(Boolean),
       image: data.image || '',
@@ -593,13 +625,19 @@ class ComponentStore {
     if (idx === -1) return null;
 
     const existing = this.components[idx];
+    const updatedTotalQty = data.totalQty !== undefined ? Math.max(1, parseInt(data.totalQty, 10) || 1) : existing.totalQty;
+    const updatedDeadQty = data.deadQty !== undefined 
+      ? Math.max(0, Math.min(updatedTotalQty, parseInt(data.deadQty, 10) || 0)) 
+      : Math.min(updatedTotalQty, existing.deadQty || 0);
+
     this.components[idx] = {
       ...existing,
       name: data.name !== undefined ? data.name.trim() : existing.name,
       sku: data.sku !== undefined ? data.sku.trim() : existing.sku,
       category: data.category !== undefined ? data.category : existing.category,
       locationBin: data.locationBin !== undefined ? data.locationBin.trim().toUpperCase() : existing.locationBin,
-      totalQty: data.totalQty !== undefined ? Math.max(1, parseInt(data.totalQty, 10) || 1) : existing.totalQty,
+      totalQty: updatedTotalQty,
+      deadQty: updatedDeadQty,
       specs: data.specs !== undefined ? data.specs.trim() : existing.specs,
       tags: data.tags !== undefined ? (Array.isArray(data.tags) ? data.tags : data.tags.split(',').map(t => t.trim()).filter(Boolean)) : existing.tags,
       image: data.image !== undefined ? data.image : existing.image,
@@ -809,12 +847,14 @@ class ComponentStore {
     let totalUnits = 0;
     let availableUnits = 0;
     let lentUnits = 0;
+    let deadUnits = 0;
     let overdueCount = 0;
 
     components.forEach(c => {
       totalUnits += c.totalQty;
       availableUnits += c.availableQty;
       lentUnits += c.lentQty;
+      deadUnits += (c.deadQty || 0);
       if (c.hasOverdue) overdueCount++;
     });
 
@@ -825,6 +865,7 @@ class ComponentStore {
       totalUnits,
       availableUnits,
       lentUnits,
+      deadUnits,
       activeBorrowersCount,
       overdueCount
     };
@@ -859,6 +900,7 @@ class ComponentStore {
     const cleanCategory = typeof c.category === 'string' ? c.category.trim().slice(0, 60) : 'General';
     const cleanBin = typeof c.locationBin === 'string' ? c.locationBin.trim().toUpperCase().slice(0, 40) : 'UNASSIGNED';
     const cleanTotalQty = Math.max(1, Math.min(1000000, parseInt(c.totalQty, 10) || 1));
+    const cleanDeadQty = Math.max(0, Math.min(cleanTotalQty, parseInt(c.deadQty, 10) || 0));
     const cleanSpecs = typeof c.specs === 'string' ? c.specs.trim().slice(0, 1000) : '';
     
     let cleanImage = '';
@@ -896,6 +938,7 @@ class ComponentStore {
       category: cleanCategory,
       locationBin: cleanBin,
       totalQty: cleanTotalQty,
+      deadQty: cleanDeadQty,
       specs: cleanSpecs,
       image: cleanImage,
       loans: cleanLoans,

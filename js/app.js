@@ -86,6 +86,7 @@
     compCategory: document.getElementById('compCategory'),
     compBin: document.getElementById('compBin'),
     compTotalQty: document.getElementById('compTotalQty'),
+    compDeadQty: document.getElementById('compDeadQty'),
     compTags: document.getElementById('compTags'),
     compSpecs: document.getElementById('compSpecs'),
     categorySuggestions: document.getElementById('categorySuggestions'),
@@ -151,6 +152,15 @@
     vaultTaglineInput: document.getElementById('vaultTaglineInput'),
     vaultIncludeStarter: document.getElementById('vaultIncludeStarter'),
     createVaultNotice: document.getElementById('createVaultNotice'),
+
+    // Edit Vault Modal
+    editVaultModal: document.getElementById('editVaultModal'),
+    editVaultForm: document.getElementById('editVaultForm'),
+    editVaultIdInput: document.getElementById('editVaultIdInput'),
+    editVaultNameInput: document.getElementById('editVaultNameInput'),
+    editVaultTaglineInput: document.getElementById('editVaultTaglineInput'),
+    editVaultNotice: document.getElementById('editVaultNotice'),
+    submitEditVaultBtn: document.getElementById('submitEditVaultBtn'),
 
     // App Shell & Strict Login Portal
     appShell: document.getElementById('appShell'),
@@ -515,10 +525,15 @@
 
   function getStockStatusBadge(item) {
     if (item.availableQty === 0) {
-      return `<span class="badge badge-red" title="Depleted: 0 units available"><span class="badge-dot"></span><span class="badge-desktop-label">Depleted (0 Stock)</span><span class="badge-mobile-label">0 Stock</span></span>`;
+      const deadText = item.deadQty > 0 ? ` (${item.deadQty} Dead)` : '';
+      return `<span class="badge badge-red" title="Depleted: 0 units available${deadText}"><span class="badge-dot"></span><span class="badge-desktop-label">Depleted (0 Stock${deadText})</span><span class="badge-mobile-label">0 Stock${deadText}</span></span>`;
     }
-    if (item.lentQty > 0) {
-      return `<span class="badge badge-brass" title="${item.availableQty} available, ${item.lentQty} in active projects"><span class="badge-dot"></span><span class="badge-desktop-label">${item.availableQty} Available (${item.lentQty} in Projects)</span><span class="badge-mobile-label">${item.availableQty} Avail</span></span>`;
+    if (item.lentQty > 0 || (item.deadQty && item.deadQty > 0)) {
+      const details = [];
+      if (item.lentQty > 0) details.push(`${item.lentQty} in Projects`);
+      if (item.deadQty > 0) details.push(`${item.deadQty} Dead`);
+      const detailsStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+      return `<span class="badge badge-brass" title="${item.availableQty} available${detailsStr}"><span class="badge-dot"></span><span class="badge-desktop-label">${item.availableQty} Available${detailsStr}</span><span class="badge-mobile-label">${item.availableQty} Avail</span></span>`;
     }
     return `<span class="badge badge-teal" title="${item.availableQty} units available (full stock)"><span class="badge-dot"></span><span class="badge-desktop-label">${item.availableQty} Available (Full)</span><span class="badge-mobile-label">${item.availableQty} Avail</span></span>`;
   }
@@ -526,6 +541,7 @@
   function createComponentCardHTML(item) {
     const availablePct = item.totalQty > 0 ? (item.availableQty / item.totalQty) * 100 : 0;
     const lentPct = item.totalQty > 0 ? (item.lentQty / item.totalQty) * 100 : 0;
+    const deadPct = item.totalQty > 0 ? ((item.deadQty || 0) / item.totalQty) * 100 : 0;
 
     let borrowerChipsHTML = '';
     if (item.activeLoans && item.activeLoans.length > 0) {
@@ -574,11 +590,12 @@
           <div class="stock-meter-container">
             <div class="stock-meter-header">
               <span class="stock-count-label">Stock Availability</span>
-              <span class="stock-ratio">${item.availableQty} / ${item.totalQty} Units In Stock</span>
+              <span class="stock-ratio">${item.availableQty} / ${item.totalQty} Units In Stock${item.deadQty > 0 ? `<span class="stock-dead-pill" title="${item.deadQty} dead / defective units">${item.deadQty} Dead</span>` : ''}</span>
             </div>
             <div class="stock-bar-track">
               <div class="stock-bar-fill-available" style="width: ${availablePct}%" title="${item.availableQty} available"></div>
               <div class="stock-bar-fill-lent" style="width: ${lentPct}%" title="${item.lentQty} in projects"></div>
+              <div class="stock-bar-fill-dead" style="width: ${deadPct}%" title="${item.deadQty || 0} dead / defective"></div>
             </div>
           </div>
 
@@ -927,6 +944,7 @@
     `;
     el.componentForm.reset();
     el.editComponentId.value = '';
+    if (el.compDeadQty) el.compDeadQty.value = 0;
     setImagePreviewState('');
     if (el.editCustodySection) el.editCustodySection.style.display = 'none';
     openModal(el.componentModal);
@@ -948,6 +966,7 @@
     el.compCategory.value = item.category || '';
     el.compBin.value = item.locationBin || '';
     el.compTotalQty.value = item.totalQty;
+    if (el.compDeadQty) el.compDeadQty.value = item.deadQty || 0;
     el.compTags.value = (item.tags || []).join(', ');
     el.compSpecs.value = item.specs || '';
 
@@ -1552,12 +1571,30 @@
       if (finalImage && finalImage.startsWith('data:image') && finalImage.length > 80000) {
         finalImage = await compressImage(finalImage, 640, 640, 0.78);
       }
+
+      const totalQtyVal = Math.max(1, parseInt(el.compTotalQty.value, 10) || 1);
+      const deadQtyVal = el.compDeadQty ? Math.max(0, parseInt(el.compDeadQty.value, 10) || 0) : 0;
+
+      if (deadQtyVal > totalQtyVal) {
+        alert('Dead / defective units cannot exceed the total inventory count.');
+        return;
+      }
+
+      if (state.editingComponentId) {
+        const existing = window.componentStore.getComponentById(state.editingComponentId);
+        if (existing && deadQtyVal + (existing.lentQty || 0) > totalQtyVal) {
+          alert(`Cannot set ${deadQtyVal} dead units: ${existing.lentQty} units are currently assigned to active projects (total count: ${totalQtyVal}). Return or adjust project loans first.`);
+          return;
+        }
+      }
+
       const payload = {
         name: el.compName.value,
         sku: el.compSku.value,
         category: el.compCategory.value || 'General',
         locationBin: el.compBin.value || 'UNASSIGNED',
-        totalQty: el.compTotalQty.value,
+        totalQty: totalQtyVal,
+        deadQty: deadQtyVal,
         specs: el.compSpecs.value,
         tags: el.compTags.value,
         image: finalImage
@@ -1689,21 +1726,34 @@
     const html = vaults.map(v => {
       const isActive = v.id === activeId;
       return `
-        <button type="button" class="user-vault-item ${isActive ? 'active' : ''}" data-switch-vault-id="${v.id}" title="${escapeHTML(v.name)}">
-          <div class="user-vault-item-info">
-            <div class="user-vault-item-name">${escapeHTML(v.name)}</div>
-            ${v.tagline ? `<div class="user-vault-item-tag">${escapeHTML(v.tagline)}</div>` : ''}
+        <div class="user-vault-row ${isActive ? 'active' : ''}">
+          <button type="button" class="user-vault-select-btn" data-switch-vault-id="${v.id}" title="Switch to ${escapeHTML(v.name)}">
+            <div class="user-vault-item-info">
+              <div class="user-vault-item-name">${escapeHTML(v.name)}</div>
+              ${v.tagline ? `<div class="user-vault-item-tag">${escapeHTML(v.tagline)}</div>` : ''}
+            </div>
+            ${isActive ? `
+              <svg class="user-vault-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            ` : ''}
+          </button>
+          <div class="user-vault-actions">
+            <button type="button" class="user-vault-action-btn edit" data-edit-vault-id="${v.id}" title="Edit Vault Name & Tagline" aria-label="Edit ${escapeHTML(v.name)}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+            ${vaults.length > 1 ? `
+              <button type="button" class="user-vault-action-btn delete" data-delete-vault-id="${v.id}" title="Delete Vault" aria-label="Delete ${escapeHTML(v.name)}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            ` : ''}
           </div>
-          ${isActive ? `
-            <svg class="user-vault-item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          ` : ''}
-        </button>
+        </div>
       `;
     }).join('');
 
     if (el.userVaultsList) el.userVaultsList.innerHTML = html;
     if (el.mobileUserVaultsList) el.mobileUserVaultsList.innerHTML = html;
 
+    // Switch vault click handler
     document.querySelectorAll('[data-switch-vault-id]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -1718,6 +1768,39 @@
           if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
           if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
           closeMobileMenu();
+        }
+      });
+    });
+
+    // Edit vault click handler
+    document.querySelectorAll('[data-edit-vault-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const vaultId = btn.getAttribute('data-edit-vault-id');
+        if (vaultId) openEditVaultModal(vaultId);
+      });
+    });
+
+    // Delete vault click handler
+    document.querySelectorAll('[data-delete-vault-id]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const vaultId = btn.getAttribute('data-delete-vault-id');
+        if (!vaultId || !window.componentStore) return;
+        const vaults = window.componentStore.getUserVaults();
+        const target = vaults.find(v => v.id === vaultId);
+        const name = target ? target.name : 'this vault';
+
+        if (confirm(`Are you sure you want to delete hardware vault "${name}"?\n\nAll components and custody logs in this vault will be permanently deleted.`)) {
+          try {
+            window.componentStore.deleteVault(vaultId);
+            const user = window.authService ? window.authService.getCurrentUser() : null;
+            if (user) updateUserProfileUI(user);
+            renderAll();
+            showToast(`Hardware Vault "${name}" deleted.`);
+          } catch (err) {
+            alert(err.message);
+          }
         }
       });
     });
@@ -1753,6 +1836,26 @@
       setTimeout(() => el.vaultNameInput && el.vaultNameInput.focus(), 80);
     };
 
+    // Edit Vault Modal Trigger
+    const openEditVaultModal = (vaultId) => {
+      if (!window.componentStore) return;
+      const vaults = window.componentStore.getUserVaults();
+      const vault = vaults.find(v => v.id === vaultId);
+      if (!vault) return;
+
+      if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
+      if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
+      closeMobileMenu();
+
+      if (el.editVaultNotice) el.editVaultNotice.style.display = 'none';
+      if (el.editVaultIdInput) el.editVaultIdInput.value = vault.id;
+      if (el.editVaultNameInput) el.editVaultNameInput.value = vault.name;
+      if (el.editVaultTaglineInput) el.editVaultTaglineInput.value = vault.tagline || '';
+
+      openModal(el.editVaultModal);
+      setTimeout(() => el.editVaultNameInput && el.editVaultNameInput.focus(), 80);
+    };
+
     if (el.openNewVaultBtn) el.openNewVaultBtn.addEventListener('click', openCreateVault);
     if (el.mobileNewVaultBtn) el.mobileNewVaultBtn.addEventListener('click', openCreateVault);
 
@@ -1778,6 +1881,32 @@
             el.createVaultNotice.textContent = err.message;
             el.createVaultNotice.className = 'auth-notice-banner error';
             el.createVaultNotice.style.display = 'block';
+          }
+        }
+      });
+    }
+
+    // Edit Vault Form Submission
+    if (el.editVaultForm) {
+      el.editVaultForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const vaultId = el.editVaultIdInput.value;
+          const name = el.editVaultNameInput.value.trim();
+          const tagline = el.editVaultTaglineInput.value.trim();
+          if (!name) throw new Error('Vault name is required.');
+
+          const updated = window.componentStore.updateVault(vaultId, { name, tagline });
+          closeModal(el.editVaultModal);
+          const user = window.authService ? window.authService.getCurrentUser() : null;
+          if (user) updateUserProfileUI(user);
+          renderAll();
+          showToast(`Hardware Vault "${updated.name}" updated!`);
+        } catch (err) {
+          if (el.editVaultNotice) {
+            el.editVaultNotice.textContent = err.message;
+            el.editVaultNotice.className = 'auth-notice-banner error';
+            el.editVaultNotice.style.display = 'block';
           }
         }
       });
