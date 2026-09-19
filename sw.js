@@ -1,5 +1,5 @@
 // Component Vault Service Worker - Offline PWA Cache
-const CACHE_NAME = 'component-vault-v3.7';
+const CACHE_NAME = 'component-vault-v3.8';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -18,7 +18,8 @@ const CORE_ASSETS = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/white-icon.svg',
-  './assets/black-icon.svg'
+  './assets/black-icon.svg',
+  './assets/ds18b20.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -81,6 +81,10 @@ const server = http.createServer((req, res) => {
       'Referrer-Policy': 'strict-origin-when-cross-origin'
     };
 
+    if (ext === '.html' || ext === '.js' || ext === '.css' || ext === '.json' || ext === '.webmanifest') {
+      headers['Cache-Control'] = 'no-cache, must-revalidate';
+    }
+
     if (req.method === 'HEAD') {
       res.writeHead(200, headers);
       return res.end();

@@ -617,7 +617,7 @@ class ComponentStore {
     });
 
     this.save();
-    return newComponent;
+    return this.computeItemMetrics(newComponent);
   }
 
   updateComponent(id, data) {

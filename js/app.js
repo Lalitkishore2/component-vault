@@ -340,6 +340,18 @@
       document.body.style.overflow = '';
     }
 
+    if (modal === el.componentModal) {
+      state.editingComponentId = null;
+      if (el.editComponentId) el.editComponentId.value = '';
+      if (el.saveComponentBtn) {
+        el.saveComponentBtn.disabled = false;
+        el.saveComponentBtn.textContent = 'Save Component';
+      }
+      if (el.imageDropArea) {
+        el.imageDropArea.classList.remove('loading');
+      }
+    }
+
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
       try { lastFocusedElement.focus(); } catch (err) {}
       lastFocusedElement = null;
@@ -1227,6 +1239,13 @@
     if (el.compDeadQty) el.compDeadQty.value = 0;
     setImagePreviewState('');
     if (el.editCustodySection) el.editCustodySection.style.display = 'none';
+    if (el.saveComponentBtn) {
+      el.saveComponentBtn.disabled = false;
+      el.saveComponentBtn.textContent = 'Save Component';
+    }
+    if (el.imageDropArea) {
+      el.imageDropArea.classList.remove('loading');
+    }
     openModal(el.componentModal);
     setTimeout(() => el.compName.focus(), 50);
   }
@@ -1493,39 +1512,74 @@
   // Client-side image compression utility using HTML5 Canvas (keeps payloads < 100KB for Firestore)
   function compressImage(imgSource, maxWidth = 640, maxHeight = 640, quality = 0.78) {
     return new Promise((resolve) => {
-      if (!imgSource) return resolve('');
+      if (!imgSource || typeof imgSource !== 'string') return resolve('');
       if (imgSource.startsWith('http') || imgSource.startsWith('data:image/svg')) {
         return resolve(imgSource);
       }
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
+      const timeout = setTimeout(() => {
+        console.warn('Image compression timed out; using source image fallback');
+        resolve(imgSource);
+      }, 4000);
 
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          } else {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
+      try {
+        const img = new Image();
+        img.onload = () => {
+          clearTimeout(timeout);
+          try {
+            let width = img.naturalWidth || img.width || 640;
+            let height = img.naturalHeight || img.height || 640;
+
+            if (width > maxWidth || height > maxHeight) {
+              if (width > height) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              } else {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, width);
+            canvas.height = Math.max(1, height);
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              return resolve(imgSource);
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let compressed = '';
+            try {
+              compressed = canvas.toDataURL('image/webp', quality);
+            } catch (e) {
+              compressed = '';
+            }
+            if (!compressed || !compressed.startsWith('data:image/webp')) {
+              try {
+                compressed = canvas.toDataURL('image/jpeg', quality);
+              } catch (e) {
+                compressed = '';
+              }
+            }
+            resolve(compressed && compressed.length < imgSource.length ? compressed : imgSource);
+          } catch (err) {
+            console.warn('Canvas compression error, falling back to original:', err);
+            resolve(imgSource);
           }
-        }
+        };
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+        img.onerror = (err) => {
+          clearTimeout(timeout);
+          console.warn('Image load error during compression:', err);
+          resolve(imgSource);
+        };
 
-        let compressed = canvas.toDataURL('image/webp', quality);
-        if (!compressed.startsWith('data:image/webp')) {
-          compressed = canvas.toDataURL('image/jpeg', quality);
-        }
-        resolve(compressed.length < imgSource.length ? compressed : imgSource);
-      };
-      img.onerror = () => resolve(imgSource);
-      img.src = imgSource;
+        img.src = imgSource;
+      } catch (err) {
+        clearTimeout(timeout);
+        console.warn('compressImage exception:', err);
+        resolve(imgSource);
+      }
     });
   }
 
@@ -2388,101 +2442,135 @@
     el.componentForm.addEventListener('submit', async e => {
       e.preventDefault();
 
-      // Prevent submitting while image is still compressing
-      if (el.imageDropArea && el.imageDropArea.classList.contains('loading')) {
-        showToast('Please wait for image processing to complete...');
-        return;
-      }
-
-      let finalImage = state.pendingImageBase64;
-      const inputUrl = el.imageUrlInput ? el.imageUrlInput.value.trim() : '';
-      if (inputUrl && (!finalImage || inputUrl !== finalImage)) {
-        finalImage = inputUrl;
-      }
-
-      if (finalImage && finalImage.startsWith('data:image') && finalImage.length > 80000) {
-        finalImage = await compressImage(finalImage, 640, 640, 0.78);
-      }
-
-      const totalQtyVal = Math.max(1, parseInt(el.compTotalQty.value, 10) || 1);
-      const deadQtyVal = el.compDeadQty ? Math.max(0, parseInt(el.compDeadQty.value, 10) || 0) : 0;
-
-      if (deadQtyVal > totalQtyVal) {
-        alert('Dead / defective units cannot exceed the total inventory count.');
-        return;
-      }
-
-      const editId = state.editingComponentId || (el.editComponentId && el.editComponentId.value ? el.editComponentId.value.trim() : null);
-
-      if (editId) {
-        const existing = window.componentStore.getComponentById(editId);
-        if (existing && deadQtyVal + (existing.lentQty || 0) > totalQtyVal) {
-          alert(`Cannot set ${deadQtyVal} dead units: ${existing.lentQty} units are currently assigned to active projects (total count: ${totalQtyVal}). Return or adjust project loans first.`);
+      try {
+        // Prevent submitting while image is still compressing
+        if (el.imageDropArea && el.imageDropArea.classList.contains('loading')) {
+          showToast('Please wait for image processing to complete...');
           return;
         }
-      }
 
-      const payload = {
-        name: el.compName.value,
-        sku: el.compSku.value,
-        category: el.compCategory.value || 'General',
-        locationBin: el.compBin.value || 'UNASSIGNED',
-        totalQty: totalQtyVal,
-        deadQty: deadQtyVal,
-        specs: el.compSpecs.value,
-        tags: el.compTags.value,
-        image: finalImage
-      };
+        let finalImage = state.pendingImageBase64;
+        const inputUrl = el.imageUrlInput ? el.imageUrlInput.value.trim() : '';
+        if (inputUrl && (!finalImage || inputUrl !== finalImage)) {
+          finalImage = inputUrl;
+        }
 
-      if (editId) {
-        const updated = window.componentStore.updateComponent(editId, payload);
-        if (!updated) {
-          console.warn('Component not found for edit ID:', editId, 'Creating as new component...');
-          const newComp = window.componentStore.addComponent(payload);
-          highlightComponent(newComp.id);
-        } else {
-          highlightComponent(editId);
+        // Only compress if not already WebP and is a large data URI
+        if (finalImage && finalImage.startsWith('data:image') && !finalImage.startsWith('data:image/webp') && finalImage.length > 80000) {
+          finalImage = await compressImage(finalImage, 640, 640, 0.78);
         }
-        showToast(`Updated "${payload.name}" successfully!`);
-      } else {
-        const newComp = window.componentStore.addComponent(payload);
-        showToast(`Added "${payload.name}" to inventory!`);
 
-        // Ensure newly added component is visible:
-        if (state.currentTab !== 'inventory') {
-          setTab('inventory', false);
+        const totalQtyVal = Math.max(1, parseInt(el.compTotalQty.value, 10) || 1);
+        const deadQtyVal = el.compDeadQty ? Math.max(0, parseInt(el.compDeadQty.value, 10) || 0) : 0;
+
+        if (deadQtyVal > totalQtyVal) {
+          alert('Dead / defective units cannot exceed the total inventory count.');
+          return;
         }
-        if (state.statusFilter === 'available' && newComp.availableQty === 0) {
-          state.statusFilter = 'all';
-          if (el.filterStatus) el.filterStatus.value = 'all';
-          updateFilterActiveBadge();
-        }
-        if (state.categoryFilter !== 'all' && state.categoryFilter !== newComp.category) {
-          state.categoryFilter = 'all';
-          if (el.filterCategory) el.filterCategory.value = 'all';
-          updateFilterActiveBadge();
-        }
-        if (state.searchQuery) {
-          const q = state.searchQuery.toLowerCase();
-          const inName = newComp.name.toLowerCase().includes(q);
-          const inSku = (newComp.sku || '').toLowerCase().includes(q);
-          if (!inName && !inSku) {
-            state.searchQuery = '';
-            if (el.searchInput) el.searchInput.value = '';
-            if (el.topSearchInput) el.topSearchInput.value = '';
-            if (el.searchClearBtn) el.searchClearBtn.classList.remove('visible');
-            if (el.topSearchClearBtn) el.topSearchClearBtn.style.display = 'none';
+
+        const editId = state.editingComponentId || (el.editComponentId && el.editComponentId.value ? el.editComponentId.value.trim() : null);
+
+        if (editId) {
+          const existing = window.componentStore.getComponentById(editId);
+          if (existing && deadQtyVal + (existing.lentQty || 0) > totalQtyVal) {
+            alert(`Cannot set ${deadQtyVal} dead units: ${existing.lentQty} units are currently assigned to active projects (total count: ${totalQtyVal}). Return or adjust project loans first.`);
+            return;
           }
         }
-        highlightComponent(newComp.id);
-      }
 
-      state.editingComponentId = null;
-      state.pendingImageBase64 = '';
-      if (el.editComponentId) el.editComponentId.value = '';
-      el.componentForm.reset();
-      renderAll();
-      closeModal(el.componentModal);
+        const payload = {
+          name: el.compName.value.trim(),
+          sku: el.compSku.value.trim(),
+          category: el.compCategory.value.trim() || 'General',
+          locationBin: el.compBin.value.trim() || 'UNASSIGNED',
+          totalQty: totalQtyVal,
+          deadQty: deadQtyVal,
+          specs: el.compSpecs.value.trim(),
+          tags: el.compTags.value.trim(),
+          image: finalImage
+        };
+
+        if (editId) {
+          const updated = window.componentStore.updateComponent(editId, payload);
+          if (!updated) {
+            console.warn('Component not found for edit ID:', editId, 'Creating as new component...');
+            const newComp = window.componentStore.addComponent(payload);
+            highlightComponent(newComp.id);
+          } else {
+            highlightComponent(editId);
+          }
+          showToast(`Updated "${payload.name}" successfully!`);
+        } else {
+          const newComp = window.componentStore.addComponent(payload);
+          showToast(`Added "${payload.name}" to inventory!`);
+
+          // Ensure newly added component is visible:
+          if (state.currentTab !== 'inventory') {
+            setTab('inventory', false);
+          }
+          // If status filter would hide the new component, reset to 'all'
+          if (state.statusFilter !== 'all') {
+            const wouldBeVisible = (
+              (state.statusFilter === 'available' && newComp.availableQty > 0) ||
+              (state.statusFilter === 'lent' && newComp.lentQty > 0) ||
+              (state.statusFilter === 'depleted' && newComp.availableQty === 0) ||
+              (state.statusFilter === 'dead' && (newComp.deadQty || 0) > 0) ||
+              (state.statusFilter === 'overdue' && newComp.hasOverdue)
+            );
+            if (!wouldBeVisible) {
+              state.statusFilter = 'all';
+              if (el.filterStatus) el.filterStatus.value = 'all';
+              updateFilterActiveBadge();
+            }
+          }
+          // If category filter would hide the new component, reset to 'all'
+          if (state.categoryFilter !== 'all' && state.categoryFilter !== newComp.category) {
+            state.categoryFilter = 'all';
+            if (el.filterCategory) el.filterCategory.value = 'all';
+            updateFilterActiveBadge();
+          }
+          // If project filter is active, reset to 'all'
+          if (state.projectFilter !== 'all') {
+            state.projectFilter = 'all';
+            if (el.filterProject) el.filterProject.value = 'all';
+            updateFilterActiveBadge();
+          }
+          // If search query would hide the new component, clear search
+          if (state.searchQuery) {
+            const q = state.searchQuery.toLowerCase();
+            const inName = newComp.name.toLowerCase().includes(q);
+            const inSku = (newComp.sku || '').toLowerCase().includes(q);
+            const inCat = (newComp.category || '').toLowerCase().includes(q);
+            const inBin = (newComp.locationBin || '').toLowerCase().includes(q);
+            if (!inName && !inSku && !inCat && !inBin) {
+              state.searchQuery = '';
+              if (el.searchInput) el.searchInput.value = '';
+              if (el.topSearchInput) el.topSearchInput.value = '';
+              if (el.searchClearBtn) el.searchClearBtn.classList.remove('visible');
+              if (el.topSearchClearBtn) el.topSearchClearBtn.style.display = 'none';
+            }
+          }
+          highlightComponent(newComp.id);
+        }
+
+        state.editingComponentId = null;
+        state.pendingImageBase64 = '';
+        if (el.editComponentId) el.editComponentId.value = '';
+        el.componentForm.reset();
+        renderAll();
+        closeModal(el.componentModal);
+      } catch (err) {
+        console.error('Error saving component:', err);
+        alert('Could not save component: ' + (err.message || err));
+      } finally {
+        if (el.saveComponentBtn) {
+          el.saveComponentBtn.disabled = false;
+          el.saveComponentBtn.textContent = 'Save Component';
+        }
+        if (el.imageDropArea) {
+          el.imageDropArea.classList.remove('loading');
+        }
+      }
     });
 
     // Lend Form Submit
@@ -2994,6 +3082,10 @@
     const trimmed = url.trim();
     // Allow http, https, and blob URLs
     if (/^https?:\/\//i.test(trimmed) || /^blob:/i.test(trimmed)) {
+      return trimmed;
+    }
+    // Allow relative asset paths (e.g. assets/ds18b20.png, ./assets/icon.svg)
+    if (/^(\.\/|\/)?assets\/[\w\-\.\/]+\.(png|jpe?g|webp|svg|gif|ico)$/i.test(trimmed)) {
       return trimmed;
     }
     // Clean internal whitespace and newlines from data URIs
