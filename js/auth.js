@@ -130,6 +130,15 @@
         this.currentUser = null;
       }
 
+      // Wait for cloudDb to finish initializing before attaching Firebase listeners
+      if (window.cloudDb && typeof window.cloudDb.whenReady === 'function') {
+        try {
+          await window.cloudDb.whenReady();
+        } catch (e) {
+          console.warn('CloudDb ready check warning:', e);
+        }
+      }
+
       // Attach Firebase Auth listener for seamless Google Sign-In session recovery
       if (window.cloudDb && window.cloudDb.auth) {
         window.cloudDb.auth.onAuthStateChanged(async (fbUser) => {

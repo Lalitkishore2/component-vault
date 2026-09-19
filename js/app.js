@@ -2014,6 +2014,15 @@
     applyTheme(state.theme);
     setViewMode(state.viewMode);
 
+    // Initialize Cloud DB before checking authentication
+    if (window.cloudDb && typeof window.cloudDb.whenReady === 'function') {
+      try {
+        await window.cloudDb.whenReady();
+      } catch (e) {
+        console.warn('CloudDb initialization wait:', e);
+      }
+    }
+
     // Initialize Authentication & Strict Login Gate
     if (window.authService) {
       await window.authService.init();

@@ -56,30 +56,12 @@ class ComponentStore {
       return;
     }
 
-    const localRaw = localStorage.getItem(this.getStorageKey());
-    let shouldApply = !localRaw;
+    const localJson = JSON.stringify(this.components);
+    const remoteJson = JSON.stringify(remote.components);
+    const localLogJson = JSON.stringify(this.activityLog);
+    const remoteLogJson = JSON.stringify(remote.activityLog || []);
 
-    if (localRaw && !shouldApply) {
-      try {
-        const localParsed = JSON.parse(localRaw);
-        const localSavedAt = localParsed.savedAt || '';
-        const remoteSavedAt = remote.savedAt || '';
-        const localComps = localParsed.components || [];
-
-        const starterIds = ['comp-rpi5-8gb', 'comp-esp32-wroom', 'comp-uno-r3', 'comp-hcsr04'];
-        const isLocalStarter = localComps.length <= 4 && localComps.every(c => starterIds.includes(c.id));
-
-        if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length !== localComps.length) {
-          shouldApply = true;
-        } else if (JSON.stringify(remote.components) !== JSON.stringify(localComps)) {
-          shouldApply = true;
-        }
-      } catch (e) {
-        shouldApply = true;
-      }
-    }
-
-    if (shouldApply) {
+    if (localJson !== remoteJson || localLogJson !== remoteLogJson) {
       console.log('[Store] Applying real-time cloud update from Firestore...');
       this.components = remote.components;
       this.activityLog = remote.activityLog || [];
@@ -331,29 +313,13 @@ class ComponentStore {
         this.setSyncStatus('syncing');
         const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
         if (remote && Array.isArray(remote.components)) {
-          const localRaw = localStorage.getItem(this.getStorageKey());
-          let shouldUpdate = force || !localRaw;
+          const localJson = JSON.stringify(this.components);
+          const remoteJson = JSON.stringify(remote.components);
+          const localLogJson = JSON.stringify(this.activityLog);
+          const remoteLogJson = JSON.stringify(remote.activityLog || []);
 
-          if (localRaw && !shouldUpdate) {
-            try {
-              const localParsed = JSON.parse(localRaw);
-              const localComps = localParsed.components || [];
-              const localSavedAt = localParsed.savedAt || '';
-              const remoteSavedAt = remote.savedAt || '';
-              const starterIds = ['comp-rpi5-8gb', 'comp-esp32-wroom', 'comp-uno-r3', 'comp-hcsr04'];
-              const isLocalStarter = localComps.length <= 4 && localComps.every(c => starterIds.includes(c.id));
-
-              if (isLocalStarter || localComps.length === 0 || remoteSavedAt >= localSavedAt || remote.components.length !== localComps.length) {
-                shouldUpdate = true;
-              } else if (JSON.stringify(remote.components) !== JSON.stringify(localComps)) {
-                shouldUpdate = true;
-              }
-            } catch (e) {
-              shouldUpdate = true;
-            }
-          }
-
-          if (shouldUpdate) {
+          if (force || localJson !== remoteJson || localLogJson !== remoteLogJson) {
+            console.log('[Store] Cloud vault has updates, updating local state...');
             this.components = remote.components;
             this.activityLog = remote.activityLog || [];
             this._lastSavedAt = remote.savedAt || new Date().toISOString();

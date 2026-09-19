@@ -25,7 +25,11 @@
       this.googleProvider = null;
       this.isConfigured = false;
       this.config = this.loadStoredConfig() || DEFAULT_FIREBASE_CONFIG;
-      this.init();
+      this._readyPromise = this.init();
+    }
+
+    whenReady() {
+      return this._readyPromise || Promise.resolve(false);
     }
 
     loadStoredConfig() {
@@ -63,7 +67,8 @@
           console.warn('App deletion warning:', e);
         }
       }
-      return this.init();
+      this._readyPromise = this.init();
+      return this._readyPromise;
     }
 
     async init() {
@@ -122,10 +127,14 @@
 
     waitForAuth() {
       if (this._authInitPromise) return this._authInitPromise;
-      if (!this.auth) {
-        return Promise.resolve(null);
-      }
-      this._authInitPromise = new Promise((resolve) => {
+      this._authInitPromise = new Promise(async (resolve) => {
+        await this.whenReady();
+        if (!this.auth) {
+          return resolve(null);
+        }
+        if (this.auth.currentUser) {
+          return resolve(this.auth.currentUser);
+        }
         const unsubscribe = this.auth.onAuthStateChanged((user) => {
           unsubscribe();
           resolve(user);
@@ -185,6 +194,7 @@
     }
 
     async saveToFirestore(userId, data) {
+      await this.whenReady();
       if (!this.isConfigured || !this.firestore || !userId) return false;
       try {
         await this.waitForAuth();
@@ -206,6 +216,7 @@
     }
 
     async loadFromFirestore(userId) {
+      await this.whenReady();
       if (!this.isConfigured || !this.firestore || !userId) return null;
       try {
         await this.waitForAuth();
@@ -221,28 +232,31 @@
     }
 
     subscribeToFirestore(userId, onData, onError) {
-      if (!this.isConfigured || !this.firestore || !userId) return () => {};
+      if (!userId) return () => {};
       const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
 
       let isUnsubscribed = false;
       let unsubscribeFirestore = null;
 
-      this.waitForAuth().then(() => {
-        if (isUnsubscribed) return;
-        try {
-          unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
-            .onSnapshot((doc) => {
-              if (doc.exists && typeof onData === 'function') {
-                onData(doc.data());
-              }
-            }, (err) => {
-              console.warn('Firestore snapshot subscription warning:', err);
-              if (typeof onError === 'function') onError(err);
-            });
-        } catch (subErr) {
-          console.warn('Failed to attach Firestore snapshot listener:', subErr);
-          if (typeof onError === 'function') onError(subErr);
-        }
+      this.whenReady().then((ready) => {
+        if (isUnsubscribed || !ready || !this.firestore) return;
+        return this.waitForAuth().then(() => {
+          if (isUnsubscribed) return;
+          try {
+            unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
+              .onSnapshot((doc) => {
+                if (doc.exists && typeof onData === 'function') {
+                  onData(doc.data());
+                }
+              }, (err) => {
+                console.warn('Firestore snapshot subscription warning:', err);
+                if (typeof onError === 'function') onError(err);
+              });
+          } catch (subErr) {
+            console.warn('Failed to attach Firestore snapshot listener:', subErr);
+            if (typeof onError === 'function') onError(subErr);
+          }
+        });
       });
 
       return () => {
