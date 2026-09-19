@@ -71,6 +71,21 @@
       return this._readyPromise;
     }
 
+    async _waitForFirebaseSDK() {
+      if (typeof window === 'undefined') return false;
+      const startTime = Date.now();
+      while (Date.now() - startTime < 10000) {
+        if (typeof firebase !== 'undefined' && 
+            typeof firebase.initializeApp === 'function' && 
+            typeof firebase.auth === 'function' && 
+            typeof firebase.firestore === 'function') {
+          return true;
+        }
+        await new Promise(r => setTimeout(r, 50));
+      }
+      return (typeof firebase !== 'undefined' && typeof firebase.firestore === 'function');
+    }
+
     async init() {
       // If config doesn't have an API key, check Firebase Hosting auto-init endpoint (/__/firebase/init.json)
       if (!this.config || !this.config.apiKey) {
@@ -93,7 +108,9 @@
       }
 
       try {
-        if (typeof firebase !== 'undefined') {
+        await this._waitForFirebaseSDK();
+
+        if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
           // Check if already initialized
           if (!firebase.apps.length) {
             this.app = firebase.initializeApp(this.config);
@@ -221,8 +238,14 @@
       try {
         await this.waitForAuth();
         const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
-        const doc = await this.firestore.collection('component_vaults').doc(cleanUserId).get();
-        if (doc.exists) {
+        let doc;
+        try {
+          // Force server read to bypass any stale local SDK cache
+          doc = await this.firestore.collection('component_vaults').doc(cleanUserId).get({ source: 'server' });
+        } catch (serverErr) {
+          doc = await this.firestore.collection('component_vaults').doc(cleanUserId).get();
+        }
+        if (doc && doc.exists) {
           return doc.data();
         }
       } catch (err) {
@@ -244,7 +267,7 @@
           if (isUnsubscribed) return;
           try {
             unsubscribeFirestore = this.firestore.collection('component_vaults').doc(cleanUserId)
-              .onSnapshot((doc) => {
+              .onSnapshot({ includeMetadataChanges: true }, (doc) => {
                 if (doc.exists && typeof onData === 'function') {
                   onData(doc.data());
                 }

@@ -14,9 +14,21 @@ class ComponentStore {
     this._lastSavedAt = null;
     this._visibilityListenerAttached = false;
     this._onlineListenerAttached = false;
+    this._cloudPollInterval = null;
     this.setupCrossTabSync();
     this.init();
     this.setupFirestoreSync();
+    this.startPeriodicCloudSync();
+  }
+
+  startPeriodicCloudSync() {
+    if (this._cloudPollInterval) clearInterval(this._cloudPollInterval);
+    // Periodically verify Cloud Firestore for remote updates every 8 seconds while online
+    this._cloudPollInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && navigator.onLine) {
+        this.pullActiveVaultFromCloud(false);
+      }
+    }, 8000);
   }
 
   setupFirestoreSync() {
