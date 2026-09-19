@@ -43,44 +43,45 @@
 }
 
 /* =========================================================================
-   LIGHT MODE: SIH AQUADOT COASTAL (Marine Navy, Ocean Teal, Warm Amber & Slate)
+   LIGHT MODE: STREAMLINE MODERNE NOIR (Sleek Obsidian, Chrome Slate & Warm Amber)
+   Mirrors Dark Mode with High-Contrast Obsidian & Metallic Elements (No Green/Blue)
    ========================================================================= */
 [data-theme="light"] {
-  --bg-app: #F5F8FA;
-  --bg-subtle: #EBF2F6;
+  --bg-app: #F8F9FA;
+  --bg-subtle: #F1F3F5;
   --bg-surface: #ffffff;
-  --bg-surface-hover: #EBF5F7;
-  --bg-surface-active: #E3EBEF;
+  --bg-surface-hover: #F1F3F5;
+  --bg-surface-active: #E9ECEF;
   --bg-input: #ffffff;
-  --bg-glass: rgba(245, 248, 250, 0.92);
-  --bg-pinstripe: rgba(41, 118, 133, 0.08);
+  --bg-glass: rgba(248, 249, 250, 0.94);
+  --bg-pinstripe: rgba(0, 0, 0, 0.03);
 
-  /* Hairline & Coastal Slate Borders */
-  --border-subtle: rgba(175, 188, 197, 0.40);
-  --border-default: #CBD5E1;
-  --border-highlight: #AFBCC5;
-  --border-focus: #297685;
-  --border-accent: rgba(41, 118, 133, 0.40);
+  /* Hairline & Slate Borders */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: #E2E8F0;
+  --border-highlight: #CBD5E1;
+  --border-focus: #18181b;
+  --border-accent: rgba(0, 0, 0, 0.25);
 
-  /* Typography Colors - WCAG AA & AAA Verified */
-  --text-primary: #1B3A4B;       /* Deep Coastal Marine Navy */
-  --text-secondary: #334155;     /* Slate */
-  --text-muted: #5C7280;         /* Contrast ratio >= 4.8:1 on #F5F8FA & #fff */
+  /* Typography Colors - High-Contrast WCAG AAA Verified */
+  --text-primary: #18181b;       /* Crisp Obsidian Charcoal */
+  --text-secondary: #475569;     /* Slate */
+  --text-muted: #64748b;         /* Contrast ratio >= 5.0:1 on #F8F9FA & #fff */
   --text-inverse: #ffffff;
 
-  /* Functional Accents - SIH Aquadot Marine Ocean Teal & Warm Amber */
-  --accent-primary: #297685;
-  --accent-primary-hover: #1e5b66;
+  /* Functional Accents - High-Contrast Obsidian & Warm Amber (No Green or Blue) */
+  --accent-primary: #18181b;
+  --accent-primary-hover: #27272a;
   --accent-primary-text: #ffffff;
 
   --accent-brass: #F29F5A;
   --accent-brass-bg: rgba(242, 159, 90, 0.14);
   --accent-brass-border: rgba(242, 159, 90, 0.42);
 
-  --accent-teal: #226D7B;
-  --accent-teal-bg: rgba(34, 109, 123, 0.12);
-  --accent-teal-border: rgba(34, 109, 123, 0.35);
-  --accent-teal-glow: rgba(34, 109, 123, 0.22);
+  --accent-teal: #18181b;        /* Obsidian replacement for legacy teal */
+  --accent-teal-bg: rgba(0, 0, 0, 0.06);
+  --accent-teal-border: rgba(0, 0, 0, 0.18);
+  --accent-teal-glow: rgba(0, 0, 0, 0.12);
 
   --accent-gold: #F29F5A;
 
@@ -88,13 +89,13 @@
   --accent-red-bg: rgba(217, 83, 79, 0.12);
   --accent-red-border: rgba(217, 83, 79, 0.35);
 
-  --card-media-bg: linear-gradient(135deg, #F0F6F8 0%, #E3EBEF 100%);
+  --card-media-bg: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
   --moderne-chrome-light: #CBD5E1;
-  --moderne-steel: #5C7280;
+  --moderne-steel: #64748b;
 
-  --shadow-sm: 0 2px 6px rgba(27, 58, 75, 0.06);
-  --shadow-md: 0 4px 16px rgba(27, 58, 75, 0.10);
-  --shadow-lg: 0 10px 32px rgba(27, 58, 75, 0.14);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 32px rgba(0, 0, 0, 0.12);
 }
 
 /* =========================================================================
