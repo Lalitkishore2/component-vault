@@ -735,12 +735,13 @@
         const dueTag = loan.returnDueDate ? 
           `<span class="${isOverdue ? 'badge badge-red' : 'badge badge-subtle'}">Due: ${loan.returnDueDate}${isOverdue ? ' (OVERDUE)' : ''}</span>` : 
           `<span class="badge badge-teal">Ongoing Project (In-use)</span>`;
+        const safeThumb = escapeHTML(sanitizeImageUrl(loan.componentImage));
 
         return `
           <div class="project-component-row">
             <div class="project-comp-info">
               <div class="project-comp-thumb">
-                <img src="${loan.componentImage || getDefaultPlaceholderImg()}" alt="${escapeHTML(loan.componentName)}">
+                <img src="${safeThumb}" alt="${escapeHTML(loan.componentName)}">
               </div>
               <div style="min-width: 0;">
                 <div class="project-comp-title">${escapeHTML(loan.componentName)}</div>
@@ -801,12 +802,13 @@
         const dueTag = loan.returnDueDate ? 
           `<span class="${isOverdue ? 'badge badge-red' : 'badge badge-subtle'}">Due: ${loan.returnDueDate}${isOverdue ? ' (OVERDUE)' : ''}</span>` : 
           `<span class="badge badge-teal">Ongoing (In-use)</span>`;
+        const safeThumb = escapeHTML(sanitizeImageUrl(loan.componentImage));
 
         return `
           <div class="borrowed-item-row">
             <div class="borrowed-item-main">
               <div class="borrowed-item-thumb">
-                <img src="${loan.componentImage || getDefaultPlaceholderImg()}" alt="${escapeHTML(loan.componentName)}">
+                <img src="${safeThumb}" alt="${escapeHTML(loan.componentName)}">
               </div>
               <div class="borrowed-item-details">
                 <div class="borrowed-item-name">${escapeHTML(loan.componentName)}</div>
@@ -1976,14 +1978,21 @@
   function sanitizeImageUrl(url) {
     if (!url || typeof url !== 'string') return getDefaultPlaceholderImg();
     const trimmed = url.trim();
-    // Allow http, https, and data:image/(png|jpeg|jpg|webp|gif|svg+xml);base64,...
+    // Allow http and https URLs
     if (/^https?:\/\//i.test(trimmed)) {
       return trimmed;
     }
-    if (/^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+    // Allow only safe raster base64 images (PNG, JPEG, WEBP, GIF)
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
       return trimmed;
     }
-    if (trimmed.startsWith('data:image/svg+xml;utf8,') && !trimmed.toLowerCase().includes('<script') && !trimmed.toLowerCase().includes('javascript:')) {
+    // Only allow safe static default placeholder SVG (no scripts, no on* event handlers, no foreignObject)
+    if (trimmed.startsWith('data:image/svg+xml') && 
+        !trimmed.toLowerCase().includes('<script') && 
+        !trimmed.toLowerCase().includes('javascript:') &&
+        !trimmed.toLowerCase().includes('onload') &&
+        !trimmed.toLowerCase().includes('onerror') &&
+        !trimmed.toLowerCase().includes('foreignobject')) {
       return trimmed;
     }
     return getDefaultPlaceholderImg();

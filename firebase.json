@@ -10,7 +10,12 @@
       "Dockerfile",
       "docker-compose.yml",
       ".env*",
-      "server.js"
+      "server.js",
+      "package*.json",
+      "firestore.rules",
+      "capacitor.config.json",
+      "skills-lock.json",
+      "*.md"
     ],
     "cleanUrls": true,
     "trailingSlash": false,

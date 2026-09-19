@@ -772,7 +772,9 @@ class ComponentStore {
     let cleanImage = '';
     if (typeof c.image === 'string') {
       const trimmed = c.image.trim();
-      if (/^https?:\/\//i.test(trimmed) || /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);base64,/i.test(trimmed) || trimmed.startsWith('data:image/svg+xml;utf8,')) {
+      if (/^https?:\/\//i.test(trimmed) || 
+          /^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(trimmed) || 
+          (trimmed.startsWith('data:image/svg+xml') && !trimmed.toLowerCase().includes('<script') && !trimmed.toLowerCase().includes('javascript:') && !trimmed.toLowerCase().includes('onload'))) {
         cleanImage = trimmed.slice(0, 500000); // 500KB cap per image
       }
     }
