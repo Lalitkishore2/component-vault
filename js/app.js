@@ -1735,17 +1735,38 @@
 
     // ================= CLOUD DATABASE CONFIGURATION MODAL =================
     const openCloudDbModal = () => {
-      if (window.cloudDb && window.cloudDb.config) {
+      const isAuth = !!(window.authService && window.authService.getCurrentUser());
+      if (window.cloudDb && window.cloudDb.config && isAuth) {
         const cfg = window.cloudDb.config;
         if (el.firebaseApiKey) el.firebaseApiKey.value = cfg.apiKey || '';
         if (el.firebaseAuthDomain) el.firebaseAuthDomain.value = cfg.authDomain || '';
         if (el.firebaseProjectId) el.firebaseProjectId.value = cfg.projectId || '';
         if (el.firebaseStorageBucket) el.firebaseStorageBucket.value = cfg.storageBucket || '';
         if (el.firebaseAppId) el.firebaseAppId.value = cfg.appId || '';
+      } else if (!isAuth) {
+        // Strict Security: Never populate secret credentials for unauthenticated visitors
+        if (el.firebaseApiKey) el.firebaseApiKey.value = '';
+        if (el.firebaseAuthDomain) el.firebaseAuthDomain.value = '';
+        if (el.firebaseProjectId) el.firebaseProjectId.value = '';
+        if (el.firebaseStorageBucket) el.firebaseStorageBucket.value = '';
+        if (el.firebaseAppId) el.firebaseAppId.value = '';
       }
-      if (el.authorizedEmailsInput && window.authService) {
+      if (el.authorizedEmailsInput && window.authService && isAuth) {
         el.authorizedEmailsInput.value = window.authService.getAuthorizedEmails().join(', ');
+      } else if (el.authorizedEmailsInput) {
+        el.authorizedEmailsInput.value = '';
       }
+
+      // Always reset sensitive inputs to masked password type when opening
+      if (el.firebaseApiKey) el.firebaseApiKey.type = 'password';
+      if (el.firebaseAppId) el.firebaseAppId.type = 'password';
+      document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+        const eyeShow = btn.querySelector('.eye-show');
+        const eyeHide = btn.querySelector('.eye-hide');
+        if (eyeShow) eyeShow.style.display = 'block';
+        if (eyeHide) eyeHide.style.display = 'none';
+      });
+
       if (el.cloudConfigAlert) el.cloudConfigAlert.style.display = 'none';
       if (el.userDropdownMenu) el.userDropdownMenu.style.display = 'none';
       if (el.userProfileWrapper) el.userProfileWrapper.classList.remove('active');
@@ -1835,6 +1856,9 @@
     if (el.mobileMenuCloudDot) {
       el.mobileMenuCloudDot.style.background = isCloud ? 'var(--accent-teal)' : 'var(--accent-brass)';
       el.mobileMenuCloudDot.style.boxShadow = isCloud ? '0 0 6px var(--accent-teal)' : '0 0 6px var(--accent-brass)';
+    }
+    if (el.openCloudConfigBtn) {
+      el.openCloudConfigBtn.style.display = isCloud ? 'none' : 'inline-flex';
     }
   }
 
