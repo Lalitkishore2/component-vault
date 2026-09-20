@@ -224,9 +224,15 @@
       if (!this.isConfigured || !this.firestore || !userId) return false;
       try {
         await this.waitForAuth();
+        if (!this.auth || !this.auth.currentUser) {
+          console.log('[CloudDb] No active Firebase Auth user, skipping Firestore write.');
+          return false;
+        }
         const cleanUserId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_');
+        // Sanitize data by JSON roundtrip to remove any unsupported undefined values
+        const sanitized = JSON.parse(JSON.stringify(data));
         await this.firestore.collection('component_vaults').doc(cleanUserId).set({
-          ...data,
+          ...sanitized,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         return true;

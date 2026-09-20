@@ -49,6 +49,13 @@ class ComponentStore {
       return;
     }
 
+    // Only attach real-time Firestore sync if Firebase Auth has an active signed-in user
+    const hasAuthUser = window.cloudDb.auth && window.cloudDb.auth.currentUser;
+    if (!hasAuthUser) {
+      this.setSyncStatus('offline', 'Operating in local offline storage.');
+      return;
+    }
+
     const vaultId = this.getActiveVaultId();
     const firestoreDocId = `${this.userId}_${vaultId}`;
 
@@ -70,20 +77,32 @@ class ComponentStore {
   handleRemoteUpdate(remote) {
     if (!remote || !Array.isArray(remote.components)) return;
 
-    // Echo prevention: if this remote snapshot matches our last local save, skip re-applying
+    const localTime = this._lastSavedAt ? new Date(this._lastSavedAt).getTime() : 0;
+    const remoteTime = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
+
+    // 1. Echo prevention: if this remote snapshot matches our last local save, skip re-applying
     if (this._lastSavedAt && remote.savedAt === this._lastSavedAt) {
       this.setSyncStatus('synced');
       return;
     }
 
+    // 2. If local has a newer save that hasn't landed in remote yet, DO NOT overwrite local components!
+    if (localTime > remoteTime) {
+      console.log('[Store] Local state is newer than incoming cloud snapshot. Preserving local additions.');
+      this.syncToCloudNow();
+      return;
+    }
+
+    // 3. Remote is newer or equal: safely merge any local components not present in remote
+    const merged = this.mergeComponentsWithRemote(this.components, remote.components);
     const localJson = JSON.stringify(this.components);
-    const remoteJson = JSON.stringify(remote.components);
+    const remoteJson = JSON.stringify(merged);
     const localLogJson = JSON.stringify(this.activityLog);
     const remoteLogJson = JSON.stringify(remote.activityLog || []);
 
     if (localJson !== remoteJson || localLogJson !== remoteLogJson) {
       console.log('[Store] Applying real-time cloud update from Firestore...');
-      this.components = remote.components;
+      this.components = merged;
       this.activityLog = remote.activityLog || [];
       this._lastSavedAt = remote.savedAt || new Date().toISOString();
       localStorage.setItem(this.getStorageKey(), JSON.stringify({
@@ -96,6 +115,41 @@ class ComponentStore {
     } else {
       this.setSyncStatus('synced');
     }
+  }
+
+  mergeComponentsWithRemote(localComponents, remoteComponents) {
+    if (!Array.isArray(localComponents) || localComponents.length === 0) {
+      return remoteComponents || [];
+    }
+    if (!Array.isArray(remoteComponents) || remoteComponents.length === 0) {
+      return localComponents;
+    }
+
+    const map = new Map();
+    // 1. Add all remote components
+    remoteComponents.forEach(c => map.set(c.id, c));
+
+    // 2. Preserve any local components not in remote (e.g. newly created locally)
+    localComponents.forEach(localComp => {
+      // Check if explicitly deleted locally
+      if (this.deletedComponentIds && this.deletedComponentIds.has(localComp.id)) {
+        return;
+      }
+      const remoteComp = map.get(localComp.id);
+      if (!remoteComp) {
+        // Component exists in local but not remote: preserve it!
+        map.set(localComp.id, localComp);
+      } else {
+        // Both have the component: keep whichever was updated more recently
+        const localT = new Date(localComp.updatedAt || localComp.createdAt || 0).getTime();
+        const remoteT = new Date(remoteComp.updatedAt || remoteComp.createdAt || 0).getTime();
+        if (localT > remoteT) {
+          map.set(localComp.id, localComp);
+        }
+      }
+    });
+
+    return Array.from(map.values());
   }
 
   setupCrossTabSync() {
@@ -352,43 +406,60 @@ class ComponentStore {
   }
 
   async pullActiveVaultFromCloud(force = false) {
-    if (window.cloudDb && typeof window.cloudDb.loadFromFirestore === 'function') {
-      try {
-        const vaultId = this.getActiveVaultId();
-        const firestoreDocId = `${this.userId}_${vaultId}`;
-        this.setSyncStatus('syncing');
-        const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
-        if (remote && Array.isArray(remote.components)) {
-          const localJson = JSON.stringify(this.components);
-          const remoteJson = JSON.stringify(remote.components);
-          const localLogJson = JSON.stringify(this.activityLog);
-          const remoteLogJson = JSON.stringify(remote.activityLog || []);
+    if (!window.cloudDb || typeof window.cloudDb.loadFromFirestore !== 'function') {
+      return false;
+    }
+    // Only pull from Firestore if Firebase Auth has an active signed-in user
+    const hasAuthUser = window.cloudDb.auth && window.cloudDb.auth.currentUser;
+    if (!hasAuthUser) {
+      return false;
+    }
 
-          if (force || localJson !== remoteJson || localLogJson !== remoteLogJson) {
-            console.log('[Store] Cloud vault has updates, updating local state...');
-            this.components = remote.components;
-            this.activityLog = remote.activityLog || [];
-            this._lastSavedAt = remote.savedAt || new Date().toISOString();
-            localStorage.setItem(this.getStorageKey(), JSON.stringify({
-              components: this.components,
-              activityLog: this.activityLog,
-              savedAt: this._lastSavedAt
-            }));
-            this.notify();
-          }
-          this.setSyncStatus('synced');
+    try {
+      const vaultId = this.getActiveVaultId();
+      const firestoreDocId = `${this.userId}_${vaultId}`;
+      this.setSyncStatus('syncing');
+      const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
+      if (remote && Array.isArray(remote.components)) {
+        const localTime = this._lastSavedAt ? new Date(this._lastSavedAt).getTime() : 0;
+        const remoteTime = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
+
+        // If local has newer unsaved changes and not forced, do not overwrite local components
+        if (!force && localTime > remoteTime) {
+          console.log('[Store] Local state is newer than remote during pull. Preserving local.');
+          this.syncToCloudNow();
           return true;
-        } else {
-          this.setSyncStatus('synced');
-          return false;
         }
-      } catch (err) {
-        console.warn('Cloud pull error:', err);
-        this.setSyncStatus('error', err.message);
+
+        const merged = force ? remote.components : this.mergeComponentsWithRemote(this.components, remote.components);
+        const localJson = JSON.stringify(this.components);
+        const remoteJson = JSON.stringify(merged);
+        const localLogJson = JSON.stringify(this.activityLog);
+        const remoteLogJson = JSON.stringify(remote.activityLog || []);
+
+        if (force || localJson !== remoteJson || localLogJson !== remoteLogJson) {
+          console.log('[Store] Cloud vault has updates, updating local state...');
+          this.components = merged;
+          this.activityLog = remote.activityLog || [];
+          this._lastSavedAt = remote.savedAt || new Date().toISOString();
+          localStorage.setItem(this.getStorageKey(), JSON.stringify({
+            components: this.components,
+            activityLog: this.activityLog,
+            savedAt: this._lastSavedAt
+          }));
+          this.notify();
+        }
+        this.setSyncStatus('synced');
+        return true;
+      } else {
+        this.setSyncStatus('synced');
         return false;
       }
+    } catch (err) {
+      console.warn('Cloud pull error:', err);
+      this.setSyncStatus('error', err.message);
+      return false;
     }
-    return false;
   }
 
   init() {
@@ -502,10 +573,12 @@ class ComponentStore {
       this._lastSavedAt = payload.savedAt;
       localStorage.setItem(this.getStorageKey(), JSON.stringify(payload));
 
-      // Asynchronously mirror this vault to Cloud Firestore if connected
+      // Asynchronously mirror this vault to Cloud Firestore if connected and authenticated
       const vaultId = this.getActiveVaultId();
       const firestoreDocId = `${this.userId}_${vaultId}`;
-      if (window.cloudDb && typeof window.cloudDb.saveToFirestore === 'function') {
+      const isCloudAuth = window.cloudDb && window.cloudDb.auth && window.cloudDb.auth.currentUser;
+
+      if (isCloudAuth && typeof window.cloudDb.saveToFirestore === 'function') {
         this.setSyncStatus('syncing');
         window.cloudDb.saveToFirestore(firestoreDocId, payload).then(ok => {
           if (ok) {
@@ -517,6 +590,8 @@ class ComponentStore {
           console.warn('Cloud sync background warning:', err);
           this.setSyncStatus('error', err.message);
         });
+      } else {
+        this.setSyncStatus('offline', 'Saved to local browser storage.');
       }
     } catch (e) {
       console.error('Failed to save to localStorage:', e);
@@ -651,6 +726,11 @@ class ComponentStore {
   deleteComponent(id) {
     const item = this.components.find(c => c.id === id);
     if (!item) return false;
+
+    if (!this.deletedComponentIds) {
+      this.deletedComponentIds = new Set();
+    }
+    this.deletedComponentIds.add(id);
 
     this.components = this.components.filter(c => c.id !== id);
     this.logActivity({
