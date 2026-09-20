@@ -1509,8 +1509,8 @@
   }
 
 
-  // Client-side image compression utility using HTML5 Canvas (keeps payloads < 100KB for Firestore)
-  function compressImage(imgSource, maxWidth = 640, maxHeight = 640, quality = 0.78) {
+  // Client-side image compression utility using HTML5 Canvas (keeps payloads < 15KB per image for Firestore)
+  function compressImage(imgSource, maxWidth = 320, maxHeight = 320, quality = 0.65) {
     return new Promise((resolve) => {
       if (!imgSource || typeof imgSource !== 'string') return resolve('');
       if (imgSource.startsWith('http') || imgSource.startsWith('data:image/svg')) {
@@ -1596,7 +1596,7 @@
     reader.onload = async ev => {
       try {
         const raw = ev.target.result;
-        const compressed = await compressImage(raw, 640, 640, 0.78);
+        const compressed = await compressImage(raw, 320, 320, 0.65);
         setImagePreviewState(compressed);
         flashDropAreaSuccess();
       } catch (err) {
@@ -2455,9 +2455,9 @@
           finalImage = inputUrl;
         }
 
-        // Only compress if not already WebP and is a large data URI
-        if (finalImage && finalImage.startsWith('data:image') && !finalImage.startsWith('data:image/webp') && finalImage.length > 80000) {
-          finalImage = await compressImage(finalImage, 640, 640, 0.78);
+        // Compact any data URI image to ensure it stays < 15KB for Firestore
+        if (finalImage && finalImage.startsWith('data:image') && finalImage.length > 8000) {
+          finalImage = await compressImage(finalImage, 320, 320, 0.65);
         }
 
         const totalQtyVal = Math.max(1, parseInt(el.compTotalQty.value, 10) || 1);
