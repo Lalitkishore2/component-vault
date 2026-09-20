@@ -2258,22 +2258,44 @@ button.user-vault-action-btn.delete:hover {
 }
 
 .toast {
-  background: rgba(22, 27, 34, 0.95);
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent-brass);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1.1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-lg), 0 4px 12px rgba(0, 0, 0, 0.08);
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   pointer-events: auto;
   opacity: 0;
   transform: translateY(16px) scale(0.96);
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .toast {
+  background: rgba(20, 20, 22, 0.96);
+  border-color: rgba(255, 255, 255, 0.14);
+  border-left-color: var(--accent-brass);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+}
+
+[data-theme="light"] .toast {
+  background: #ffffff;
+  border-color: var(--border-default);
+  border-left-color: #C26715;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+
+.toast-error {
+  border-left-color: var(--accent-red) !important;
 }
 
 .toast.show {
@@ -2288,30 +2310,40 @@ button.user-vault-action-btn.delete:hover {
 
 .toast-icon {
   flex-shrink: 0;
-  color: var(--accent-teal);
+  color: var(--accent-brass);
+}
+
+[data-theme="light"] .toast-icon {
+  color: #C26715;
+}
+
+.toast-error .toast-icon {
+  color: var(--accent-red) !important;
 }
 
 .toast-message {
   flex: 1;
-  line-height: 1.4;
+  line-height: 1.45;
   word-break: break-word;
+  color: inherit;
 }
 
 .toast-close {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: color var(--transition-fast);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .toast-close:hover {
   color: var(--text-primary);
+  background-color: var(--bg-surface-hover);
 }
 
 @keyframes highlightPulse {
