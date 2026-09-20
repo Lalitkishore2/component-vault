@@ -632,6 +632,8 @@
       el.inventoryGrid.style.display = 'none';
       el.tableViewContainer.style.display = 'block';
     }
+
+    renderInventory();
   }
 
   // --- Rendering Pipeline ---
@@ -796,19 +798,16 @@
     if (state.viewMode === 'grid') {
       el.inventoryGrid.style.display = 'grid';
       el.tableViewContainer.style.display = 'none';
+      // Render ONLY Grid Cards - keeps DOM lean and fast on mobile
+      el.inventoryGrid.innerHTML = items.map(item => createComponentCardHTML(item)).join('');
+      el.inventoryTableBody.innerHTML = '';
     } else {
       el.inventoryGrid.style.display = 'none';
       el.tableViewContainer.style.display = 'block';
+      // Render ONLY Table Rows
+      el.inventoryTableBody.innerHTML = items.map(item => createComponentTableRowHTML(item)).join('');
+      el.inventoryGrid.innerHTML = '';
     }
-
-    // Render Grid Cards
-    el.inventoryGrid.innerHTML = items.map(item => createComponentCardHTML(item)).join('');
-
-    // Render Table Rows
-    el.inventoryTableBody.innerHTML = items.map(item => createComponentTableRowHTML(item)).join('');
-
-    // Attach Event Listeners
-    attachInventoryItemListeners();
   }
 
   function getStockStatusBadge(item) {
@@ -856,7 +855,7 @@
       <article class="component-card" data-component-id="${item.id}">
         <!-- Photo thumbnail -->
         <div class="card-media" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-          <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" decoding="auto">
+          <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async" width="320" height="240">
           <div class="card-media-overlay">
             <span class="card-category-tag">${escapeHTML(item.category || 'General')}</span>
             <span class="card-bin-tag">${escapeHTML(item.locationBin || 'UNASSIGNED')}</span>
@@ -937,7 +936,7 @@
       <tr data-component-id="${item.id}">
         <td class="col-photo">
           <div class="table-thumb" data-action="lightbox" data-image="${encodeURI(imgSource)}" data-name="${escapeHTML(item.name)}" data-sku="${escapeHTML(item.sku || '')}">
-            <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy">
+            <img src="${safeImgAttr}" alt="${escapeHTML(item.name)}" loading="lazy" decoding="async" width="48" height="48">
           </div>
         </td>
         <td class="col-name">
@@ -970,40 +969,43 @@
     `;
   }
 
-  function attachInventoryItemListeners() {
-    // Lightbox triggers
-    document.querySelectorAll('[data-action="lightbox"]').forEach(trigger => {
-      trigger.addEventListener('click', () => {
-        const src = decodeURI(trigger.getAttribute('data-image'));
-        const name = trigger.getAttribute('data-name');
-        const sku = trigger.getAttribute('data-sku');
+  // Delegated event listener for inventory actions (replaces 200+ per-element listeners)
+  function setupDelegatedInventoryListeners() {
+    if (!el.inventoryViewWrapper) return;
+    el.inventoryViewWrapper.addEventListener('click', (e) => {
+      // 1. Lightbox trigger
+      const lightboxTrigger = e.target.closest('[data-action="lightbox"]');
+      if (lightboxTrigger) {
+        const src = decodeURI(lightboxTrigger.getAttribute('data-image'));
+        const name = lightboxTrigger.getAttribute('data-name');
+        const sku = lightboxTrigger.getAttribute('data-sku');
         openLightbox(src, `${name} (${sku})`);
-      });
-    });
+        return;
+      }
 
-    // Lend triggers
-    document.querySelectorAll('[data-action="lend"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      // 2. Lend trigger
+      const lendBtn = e.target.closest('[data-action="lend"]');
+      if (lendBtn) {
         e.stopPropagation();
-        const id = btn.getAttribute('data-id');
+        const id = lendBtn.getAttribute('data-id');
         openLendModal(id);
-      });
-    });
+        return;
+      }
 
-    // Edit triggers
-    document.querySelectorAll('[data-action="edit"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      // 3. Edit trigger
+      const editBtn = e.target.closest('[data-action="edit"]');
+      if (editBtn) {
         e.stopPropagation();
-        const id = btn.getAttribute('data-id');
+        const id = editBtn.getAttribute('data-id');
         openEditComponentModal(id);
-      });
-    });
+        return;
+      }
 
-    // Delete triggers
-    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      // 4. Delete trigger
+      const deleteBtn = e.target.closest('[data-action="delete"]');
+      if (deleteBtn) {
         e.stopPropagation();
-        const id = btn.getAttribute('data-id');
+        const id = deleteBtn.getAttribute('data-id');
         const item = window.componentStore.getComponentById(id);
         if (!item) return;
 
@@ -1017,7 +1019,8 @@
           renderAll();
           showToast(`Deleted "${item.name}" from inventory.`);
         }
-      });
+        return;
+      }
     });
   }
 
@@ -1795,6 +1798,18 @@
     });
   }
 
+  function loadScriptAsync(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) return resolve();
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = (e) => reject(e);
+      document.body.appendChild(s);
+    });
+  }
+
   // --- PDF Inventory Ledger & Audit Generation ---
   async function generateInventoryPdf(action = 'download') {
     try {
@@ -1816,6 +1831,17 @@
         lentUnits += (parseInt(c.lentQty, 10) || 0);
         deadUnits += (parseInt(c.deadQty, 10) || 0);
       });
+
+      // Dynamically load PDF engine on-demand (saves 403 KB on initial boot)
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast('Preparing PDF engine...', 'info');
+        try {
+          await loadScriptAsync('js/jspdf.umd.min.js?v=5.1');
+          await loadScriptAsync('js/jspdf.plugin.autotable.min.js?v=5.1');
+        } catch (err) {
+          console.warn('[PDF] Dynamic load error:', err);
+        }
+      }
 
       const { jsPDF } = window.jspdf || {};
       if (!jsPDF) {
@@ -3122,6 +3148,7 @@
   // --- Bootstrapping ---
   async function init() {
     applyTheme(state.theme);
+    setupDelegatedInventoryListeners();
     setViewMode(state.viewMode);
 
     // Initialize History state for root page load

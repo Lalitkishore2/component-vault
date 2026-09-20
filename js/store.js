@@ -31,12 +31,13 @@ class ComponentStore {
 
   startPeriodicCloudSync() {
     if (this._cloudPollInterval) clearInterval(this._cloudPollInterval);
-    // Periodically verify Cloud Firestore for remote updates every 8 seconds while online
+    // Periodically verify Cloud Firestore for remote updates (fallback sync every 60s while online)
+    // Primary updates are real-time via onSnapshot listener in setupFirestoreSync
     this._cloudPollInterval = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible' && navigator.onLine) {
         this.pullActiveVaultFromCloud(false);
       }
-    }, 8000);
+    }, 60000);
   }
 
   setupFirestoreSync() {
@@ -359,6 +360,12 @@ class ComponentStore {
         this.setSyncStatus('syncing');
         const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
         if (remote && Array.isArray(remote.components)) {
+          // Fast path: if timestamp matches, nothing changed remotely
+          if (!force && this._lastSavedAt && remote.savedAt && remote.savedAt === this._lastSavedAt) {
+            this.setSyncStatus('synced');
+            return true;
+          }
+
           const localJson = JSON.stringify(this.components);
           const remoteJson = JSON.stringify(remote.components);
           const localLogJson = JSON.stringify(this.activityLog);
