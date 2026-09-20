@@ -295,10 +295,26 @@
         users.push(existing);
         this._saveUsers(users);
 
-        // Seed default starter catalog for new Google user if blank
-        const vaultKey = `CV_VAULT_DATA_${existing.id}`;
-        if (!localStorage.getItem(vaultKey) && typeof DEFAULT_COMPONENTS !== 'undefined') {
-          const starterData = {
+        // Seed or migrate catalog for new Google user
+        const vaultKey = `CV_VAULT_DATA_${existing.id}_vault-default`;
+        const legacyVaultKey = `CV_VAULT_DATA_${existing.id}`;
+        
+        let initialData = null;
+        // Check if there are local workstation components in user-owner to migrate
+        try {
+          const ownerKey = 'CV_VAULT_DATA_user-owner_vault-default';
+          const fallbackOwnerKey = 'CV_VAULT_DATA_user-owner';
+          const raw = localStorage.getItem(ownerKey) || localStorage.getItem(fallbackOwnerKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.components) && parsed.components.length > 0) {
+              initialData = parsed;
+            }
+          }
+        } catch (e) {}
+
+        if (!localStorage.getItem(vaultKey) && !localStorage.getItem(legacyVaultKey)) {
+          const starterData = initialData || (typeof DEFAULT_COMPONENTS !== 'undefined' ? {
             components: JSON.parse(JSON.stringify(DEFAULT_COMPONENTS)),
             activityLog: [
               {
@@ -309,8 +325,11 @@
               }
             ],
             savedAt: new Date().toISOString()
-          };
-          localStorage.setItem(vaultKey, JSON.stringify(starterData));
+          } : null);
+          if (starterData) {
+            localStorage.setItem(vaultKey, JSON.stringify(starterData));
+            localStorage.setItem(legacyVaultKey, JSON.stringify(starterData));
+          }
         }
       } else {
         // Update photo and display name if changed

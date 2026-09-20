@@ -378,7 +378,24 @@ class ComponentStore {
 
   async setVaultUser(userId) {
     if (!userId) return;
+    const prevUserId = this.userId;
     this.userId = userId;
+
+    // If new user vault has no stored data yet, migrate from previous user (e.g. local user-owner)
+    const currentKey = this.getStorageKey();
+    if (!localStorage.getItem(currentKey) && prevUserId && prevUserId !== userId) {
+      const prevKey = `CV_VAULT_DATA_${prevUserId}_${this.getActiveVaultId()}`;
+      const fallbackPrevKey = `CV_VAULT_DATA_${prevUserId}`;
+      const prevData = localStorage.getItem(prevKey) || localStorage.getItem(fallbackPrevKey);
+      if (prevData) {
+        try {
+          const parsed = JSON.parse(prevData);
+          if (parsed && Array.isArray(parsed.components) && parsed.components.length > 0) {
+            localStorage.setItem(currentKey, prevData);
+          }
+        } catch (e) {}
+      }
+    }
 
     // Asynchronously sync remote vault registry
     if (window.cloudDb && typeof window.cloudDb.loadFromFirestore === 'function') {
@@ -401,7 +418,7 @@ class ComponentStore {
 
     this.init();
     this.notify();
-    await this.pullActiveVaultFromCloud(true);
+    await this.pullActiveVaultFromCloud(false);
     this.setupFirestoreSync();
   }
 
@@ -431,7 +448,8 @@ class ComponentStore {
           return true;
         }
 
-        const merged = force ? remote.components : this.mergeComponentsWithRemote(this.components, remote.components);
+        // Always merge to ensure locally added components not in remote are preserved
+        const merged = this.mergeComponentsWithRemote(this.components, remote.components);
         const localJson = JSON.stringify(this.components);
         const remoteJson = JSON.stringify(merged);
         const localLogJson = JSON.stringify(this.activityLog);
