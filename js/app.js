@@ -3178,6 +3178,19 @@
       updateAuthGate(null);
     }
 
+    // Connect reactive Cloud Sync badge in header
+    if (window.componentStore) {
+      window.componentStore.onSyncStatusChange = (status, msg) => {
+        updateSyncBadgeUI(status, msg);
+      };
+      updateSyncBadgeUI(window.componentStore.syncStatus, window.componentStore.syncError);
+    }
+    window.addEventListener('cv_sync_status', (e) => {
+      if (e.detail) {
+        updateSyncBadgeUI(e.detail.status, e.detail.error);
+      }
+    });
+
     initEventBindings();
     renderAll();
 

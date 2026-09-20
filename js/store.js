@@ -417,9 +417,78 @@ class ComponentStore {
     }
 
     this.init();
+
+    // Check if user-owner has local workstation components not yet in this user vault
+    if (this.userId !== 'user-owner') {
+      try {
+        const ownerKey = `CV_VAULT_DATA_user-owner_vault-default`;
+        const fallbackOwnerKey = `CV_VAULT_DATA_user-owner`;
+        const ownerRaw = localStorage.getItem(ownerKey) || localStorage.getItem(fallbackOwnerKey);
+        if (ownerRaw) {
+          const ownerData = JSON.parse(ownerRaw);
+          if (ownerData && Array.isArray(ownerData.components) && ownerData.components.length > 0) {
+            const merged = this.mergeComponentsWithRemote(this.components, ownerData.components);
+            if (merged.length !== this.components.length) {
+              console.log('[Store] Auto-merged local workstation components into user account:', merged.length);
+              this.components = merged;
+              this._lastSavedAt = new Date().toISOString();
+              localStorage.setItem(this.getStorageKey(), JSON.stringify({
+                components: this.components,
+                activityLog: this.activityLog,
+                savedAt: this._lastSavedAt
+              }));
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error merging local workstation components:', e);
+      }
+    }
+
     this.notify();
     await this.pullActiveVaultFromCloud(false);
     this.setupFirestoreSync();
+
+    // Push local components to Cloud Firestore immediately after logging in
+    if (Array.isArray(this.components) && this.components.length > 0) {
+      await this.syncToCloudNow();
+    }
+  }
+
+  async syncToCloudNow() {
+    if (!window.cloudDb || typeof window.cloudDb.saveToFirestore !== 'function') {
+      this.setSyncStatus('error', 'Cloud database service not available.');
+      return false;
+    }
+
+    const hasAuthUser = window.cloudDb.auth && window.cloudDb.auth.currentUser;
+    if (!hasAuthUser) {
+      this.setSyncStatus('offline', 'Operating locally. Sign in with Google to sync to cloud.');
+      return false;
+    }
+
+    try {
+      const vaultId = this.getActiveVaultId();
+      const firestoreDocId = `${this.userId}_${vaultId}`;
+      const payload = {
+        components: this.components,
+        activityLog: this.activityLog,
+        savedAt: this._lastSavedAt || new Date().toISOString()
+      };
+      this.setSyncStatus('syncing');
+      const ok = await window.cloudDb.saveToFirestore(firestoreDocId, payload);
+      if (ok) {
+        this.setSyncStatus('synced');
+        return true;
+      } else {
+        this.setSyncStatus('error', 'Cloud sync failed. Check Firebase Firestore permissions.');
+        return false;
+      }
+    } catch (err) {
+      console.warn('syncToCloudNow error:', err);
+      this.setSyncStatus('error', err.message || 'Sync error');
+      return false;
+    }
   }
 
   async pullActiveVaultFromCloud(force = false) {
