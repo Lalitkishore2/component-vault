@@ -90,6 +90,7 @@
     compTags: document.getElementById('compTags'),
     compSpecs: document.getElementById('compSpecs'),
     categorySuggestions: document.getElementById('categorySuggestions'),
+    binSuggestions: document.getElementById('binSuggestions'),
     editCustodySection: document.getElementById('editCustodySection'),
     editCustodySummaryList: document.getElementById('editCustodySummaryList'),
     modalLendDirectBtn: document.getElementById('modalLendDirectBtn'),
@@ -669,42 +670,64 @@
 
   function updateCategoryAndProjectFilters() {
     const categories = window.componentStore.getCategories();
-    const projects = window.componentStore.getProjectsList();
+    const activeProjects = window.componentStore.getProjectsList(true);
+    const storageBins = window.componentStore.getStorageBins();
 
     // Category dropdown
-    const currentCat = el.filterCategory.value;
+    const currentCat = (el.filterCategory.value || 'all').toLowerCase();
     el.filterCategory.innerHTML = '<option value="all">All Categories</option>';
     categories.forEach(cat => {
       const opt = document.createElement('option');
       opt.value = cat;
       opt.textContent = cat;
-      if (cat === currentCat) opt.selected = true;
+      if (cat.toLowerCase() === currentCat) opt.selected = true;
       el.filterCategory.appendChild(opt);
     });
 
-    // Category suggestions in modal
-    el.categorySuggestions.innerHTML = '';
-    categories.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      el.categorySuggestions.appendChild(opt);
-    });
+    // Category suggestions in component form modal
+    if (el.categorySuggestions) {
+      el.categorySuggestions.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        el.categorySuggestions.appendChild(opt);
+      });
+    }
 
-    // Project dropdown in toolbar
-    const currentProj = el.filterProject.value;
+    // Storage Bin suggestions in component form modal
+    if (el.binSuggestions) {
+      el.binSuggestions.innerHTML = '';
+      storageBins.forEach(bin => {
+        const opt = document.createElement('option');
+        opt.value = bin;
+        el.binSuggestions.appendChild(opt);
+      });
+    }
+
+    // Project dropdown in toolbar (active projects only, case-insensitive)
+    const currentProj = (el.filterProject.value || 'all').toLowerCase();
     el.filterProject.innerHTML = '<option value="all">All Projects</option>';
-    projects.forEach(proj => {
+    let matchedProject = false;
+    activeProjects.forEach(proj => {
       const opt = document.createElement('option');
       opt.value = proj;
       opt.textContent = proj;
-      if (proj === currentProj) opt.selected = true;
+      if (proj.toLowerCase() === currentProj) {
+        opt.selected = true;
+        matchedProject = true;
+      }
       el.filterProject.appendChild(opt);
     });
+    // If previously selected project is no longer active, reset filter to 'all'
+    if (currentProj !== 'all' && !matchedProject) {
+      el.filterProject.value = 'all';
+      state.projectFilter = 'all';
+    }
 
     // Project datalist in lend modal
     if (el.projectDatalist) {
       el.projectDatalist.innerHTML = '';
-      projects.forEach(proj => {
+      activeProjects.forEach(proj => {
         const opt = document.createElement('option');
         opt.value = proj;
         el.projectDatalist.appendChild(opt);
@@ -745,12 +768,14 @@
     }
 
     if (state.categoryFilter !== 'all') {
-      items = items.filter(item => item.category === state.categoryFilter);
+      const targetCat = state.categoryFilter.trim().toLowerCase();
+      items = items.filter(item => (item.category || '').trim().toLowerCase() === targetCat);
     }
 
     if (state.projectFilter !== 'all') {
+      const targetProj = state.projectFilter.trim().toLowerCase();
       items = items.filter(item => 
-        (item.activeLoans || []).some(l => l.project && l.project.trim() === state.projectFilter)
+        (item.activeLoans || []).some(l => (l.project || '').trim().toLowerCase() === targetProj)
       );
     }
 
@@ -1335,6 +1360,7 @@
     if (el.imageDropArea) {
       el.imageDropArea.classList.remove('loading');
     }
+    updateCategoryAndProjectFilters();
     openModal(el.componentModal);
     setTimeout(() => el.compName.focus(), 50);
   }
@@ -1360,6 +1386,7 @@
     el.compSpecs.value = item.specs || '';
 
     setImagePreviewState(item.image || '');
+    updateCategoryAndProjectFilters();
 
     // Display project custody section with direct Lend / Assign action
     if (el.editCustodySection) {

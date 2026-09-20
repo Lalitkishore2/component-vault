@@ -843,16 +843,19 @@ class ComponentStore {
     })).sort((a, b) => b.totalAllocatedUnits - a.totalAllocatedUnits);
   }
 
-  getProjectsList() {
-    const set = new Set();
-    this.components.forEach(c => {
-      (c.loans || []).forEach(l => {
-        if (l.project && l.project.trim()) {
-          set.add(l.project.trim());
+  getProjectsList(activeOnly = true) {
+    const loans = activeOnly ? this.getAllActiveLoans() : (this.components.flatMap(c => c.loans || []));
+    const map = new Map();
+    loans.forEach(l => {
+      const proj = (l.project || '').trim();
+      if (proj) {
+        const key = proj.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, proj);
         }
-      });
+      }
     });
-    return Array.from(set).sort();
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   }
 
   getOverallStats() {
@@ -886,11 +889,31 @@ class ComponentStore {
   }
 
   getCategories() {
-    const set = new Set();
+    const map = new Map();
     this.components.forEach(c => {
-      if (c.category) set.add(c.category);
+      const cat = (c.category || '').trim();
+      if (cat) {
+        const key = cat.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, cat);
+        }
+      }
     });
-    return Array.from(set).sort();
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }
+
+  getStorageBins() {
+    const map = new Map();
+    this.components.forEach(c => {
+      const bin = (c.locationBin || '').trim();
+      if (bin && bin.toUpperCase() !== 'UNASSIGNED') {
+        const key = bin.toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, bin);
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
   }
 
   exportData() {
