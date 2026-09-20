@@ -77,33 +77,35 @@ class ComponentStore {
   handleRemoteUpdate(remote) {
     if (!remote || !Array.isArray(remote.components)) return;
 
-    const localTime = this._lastSavedAt ? new Date(this._lastSavedAt).getTime() : 0;
-    const remoteTime = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
-
     // 1. Echo prevention: if this remote snapshot matches our last local save, skip re-applying
     if (this._lastSavedAt && remote.savedAt === this._lastSavedAt) {
       this.setSyncStatus('synced');
       return;
     }
 
-    // 2. If local has a newer save that hasn't landed in remote yet, DO NOT overwrite local components!
-    if (localTime > remoteTime) {
-      console.log('[Store] Local state is newer than incoming cloud snapshot. Preserving local additions.');
-      this.syncToCloudNow();
-      return;
-    }
+    // 2. ALWAYS safely merge local and remote components
+    const merged = this.mergeComponentsWithRemote(
+      this.components, 
+      remote.components, 
+      this.activityLog, 
+      remote.activityLog || []
+    );
 
-    // 3. Remote is newer or equal: safely merge any local components not present in remote
-    const merged = this.mergeComponentsWithRemote(this.components, remote.components);
+    // Merge activity logs (unique by id, newest first)
+    const logMap = new Map();
+    (remote.activityLog || []).forEach(a => { if (a && a.id) logMap.set(a.id, a); });
+    (this.activityLog || []).forEach(a => { if (a && a.id) logMap.set(a.id, a); });
+    const mergedLog = Array.from(logMap.values()).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
     const localJson = JSON.stringify(this.components);
     const remoteJson = JSON.stringify(merged);
     const localLogJson = JSON.stringify(this.activityLog);
-    const remoteLogJson = JSON.stringify(remote.activityLog || []);
+    const remoteLogJson = JSON.stringify(mergedLog);
 
     if (localJson !== remoteJson || localLogJson !== remoteLogJson) {
-      console.log('[Store] Applying real-time cloud update from Firestore...');
+      console.log('[Store] Applying real-time cloud update from Firestore. Components:', merged.length);
       this.components = merged;
-      this.activityLog = remote.activityLog || [];
+      this.activityLog = mergedLog;
       this._lastSavedAt = remote.savedAt || new Date().toISOString();
       localStorage.setItem(this.getStorageKey(), JSON.stringify({
         components: this.components,
@@ -112,12 +114,18 @@ class ComponentStore {
       }));
       this.setSyncStatus('synced');
       this.notify();
+
+      // If local had components not yet in remote, immediately push the complete merged set to cloud
+      if (merged.length > remote.components.length) {
+        console.log('[Store] Local has extra components; pushing complete merged vault to cloud...');
+        this.syncToCloudNow();
+      }
     } else {
       this.setSyncStatus('synced');
     }
   }
 
-  mergeComponentsWithRemote(localComponents, remoteComponents) {
+  mergeComponentsWithRemote(localComponents, remoteComponents, localLog = [], remoteLog = []) {
     if (!Array.isArray(localComponents) || localComponents.length === 0) {
       return remoteComponents || [];
     }
@@ -125,14 +133,26 @@ class ComponentStore {
       return localComponents;
     }
 
-    const map = new Map();
-    // 1. Add all remote components
-    remoteComponents.forEach(c => map.set(c.id, c));
+    // Collect all deleted component IDs from tracking set and activity logs
+    const deletedIds = new Set(this.deletedComponentIds || []);
+    const combinedLog = [...(localLog || []), ...(remoteLog || [])];
+    combinedLog.forEach(entry => {
+      if (entry && entry.type === 'deleted' && entry.componentId) {
+        deletedIds.add(entry.componentId);
+      }
+    });
 
-    // 2. Preserve any local components not in remote (e.g. newly created locally)
+    const map = new Map();
+    // 1. Add all remote components (unless deleted)
+    remoteComponents.forEach(c => {
+      if (c && c.id && !deletedIds.has(c.id)) {
+        map.set(c.id, c);
+      }
+    });
+
+    // 2. Add or update with local components
     localComponents.forEach(localComp => {
-      // Check if explicitly deleted locally
-      if (this.deletedComponentIds && this.deletedComponentIds.has(localComp.id)) {
+      if (!localComp || !localComp.id || deletedIds.has(localComp.id)) {
         return;
       }
       const remoteComp = map.get(localComp.id);
@@ -507,27 +527,35 @@ class ComponentStore {
       this.setSyncStatus('syncing');
       const remote = await window.cloudDb.loadFromFirestore(firestoreDocId);
       if (remote && Array.isArray(remote.components)) {
-        const localTime = this._lastSavedAt ? new Date(this._lastSavedAt).getTime() : 0;
-        const remoteTime = remote.savedAt ? new Date(remote.savedAt).getTime() : 0;
-
-        // If local has newer unsaved changes and not forced, do not overwrite local components
-        if (!force && localTime > remoteTime) {
-          console.log('[Store] Local state is newer than remote during pull. Preserving local.');
-          this.syncToCloudNow();
+        // Echo prevention: if remote snapshot matches our last save and not forced, skip
+        if (!force && this._lastSavedAt && remote.savedAt === this._lastSavedAt) {
+          this.setSyncStatus('synced');
           return true;
         }
 
-        // Always merge to ensure locally added components not in remote are preserved
-        const merged = this.mergeComponentsWithRemote(this.components, remote.components);
+        // Always merge to ensure both local and remote components are preserved
+        const merged = this.mergeComponentsWithRemote(
+          this.components, 
+          remote.components, 
+          this.activityLog, 
+          remote.activityLog || []
+        );
+
+        // Merge activity logs (unique by id, newest first)
+        const logMap = new Map();
+        (remote.activityLog || []).forEach(a => { if (a && a.id) logMap.set(a.id, a); });
+        (this.activityLog || []).forEach(a => { if (a && a.id) logMap.set(a.id, a); });
+        const mergedLog = Array.from(logMap.values()).sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
         const localJson = JSON.stringify(this.components);
         const remoteJson = JSON.stringify(merged);
         const localLogJson = JSON.stringify(this.activityLog);
-        const remoteLogJson = JSON.stringify(remote.activityLog || []);
+        const remoteLogJson = JSON.stringify(mergedLog);
 
         if (force || localJson !== remoteJson || localLogJson !== remoteLogJson) {
-          console.log('[Store] Cloud vault has updates, updating local state...');
+          console.log('[Store] Cloud vault has updates, updating local state. Components:', merged.length);
           this.components = merged;
-          this.activityLog = remote.activityLog || [];
+          this.activityLog = mergedLog;
           this._lastSavedAt = remote.savedAt || new Date().toISOString();
           localStorage.setItem(this.getStorageKey(), JSON.stringify({
             components: this.components,
@@ -535,10 +563,20 @@ class ComponentStore {
             savedAt: this._lastSavedAt
           }));
           this.notify();
+
+          // If local had components that remote didn't have, push the merged set to cloud
+          if (merged.length > remote.components.length) {
+            console.log('[Store] Local had extra components during pull; pushing merged vault to cloud...');
+            this.syncToCloudNow();
+          }
         }
         this.setSyncStatus('synced');
         return true;
       } else {
+        // If remote has no data yet, push our local components up
+        if (Array.isArray(this.components) && this.components.length > 0) {
+          this.syncToCloudNow();
+        }
         this.setSyncStatus('synced');
         return false;
       }
