@@ -781,9 +781,88 @@
     return items;
   }
 
+  // --- Progressive Chunked Rendering (Virtualization-Lite for 50+ items) ---
+  const RENDER_CHUNK_SIZE = 16;
+  let currentRenderedCount = 0;
+  let currentRenderItems = [];
+  let scrollObserver = null;
+
+  function removeScrollSentinel() {
+    const existing = document.getElementById('inventoryScrollSentinel');
+    if (existing) {
+      if (scrollObserver) scrollObserver.unobserve(existing);
+      existing.remove();
+    }
+  }
+
+  function appendNextChunk() {
+    if (currentRenderedCount >= currentRenderItems.length) {
+      removeScrollSentinel();
+      return;
+    }
+
+    const nextCount = Math.min(currentRenderedCount + RENDER_CHUNK_SIZE, currentRenderItems.length);
+    const nextBatch = currentRenderItems.slice(currentRenderedCount, nextCount);
+    currentRenderedCount = nextCount;
+
+    if (state.viewMode === 'grid') {
+      const fragment = document.createRange().createContextualFragment(
+        nextBatch.map(item => createComponentCardHTML(item)).join('')
+      );
+      const sentinel = document.getElementById('inventoryScrollSentinel');
+      if (sentinel) {
+        el.inventoryGrid.insertBefore(fragment, sentinel);
+      } else {
+        el.inventoryGrid.appendChild(fragment);
+      }
+    } else {
+      const fragment = document.createRange().createContextualFragment(
+        nextBatch.map(item => createComponentTableRowHTML(item)).join('')
+      );
+      const sentinel = document.getElementById('inventoryScrollSentinel');
+      if (sentinel) {
+        el.inventoryTableBody.insertBefore(fragment, sentinel);
+      } else {
+        el.inventoryTableBody.appendChild(fragment);
+      }
+    }
+
+    if (currentRenderedCount >= currentRenderItems.length) {
+      removeScrollSentinel();
+    }
+  }
+
+  function setupScrollSentinel() {
+    removeScrollSentinel();
+    if (currentRenderedCount >= currentRenderItems.length) return;
+
+    const sentinel = document.createElement('div');
+    sentinel.id = 'inventoryScrollSentinel';
+    sentinel.style.cssText = 'height: 40px; width: 100%; grid-column: 1 / -1; pointer-events: none; opacity: 0;';
+
+    if (state.viewMode === 'grid') {
+      el.inventoryGrid.appendChild(sentinel);
+    } else {
+      el.inventoryTableBody.appendChild(sentinel);
+    }
+
+    if (!scrollObserver) {
+      scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            appendNextChunk();
+          }
+        });
+      }, { rootMargin: '300px 0px' });
+    }
+
+    scrollObserver.observe(sentinel);
+  }
+
   // --- Render Inventory Grid & Table ---
   function renderInventory() {
     const items = getFilteredComponents();
+    currentRenderItems = items;
 
     if (items.length === 0) {
       el.inventoryGrid.innerHTML = '';
@@ -791,23 +870,29 @@
       el.inventoryEmptyState.style.display = 'flex';
       el.inventoryGrid.style.display = 'none';
       el.tableViewContainer.style.display = 'none';
+      removeScrollSentinel();
       return;
     }
 
     el.inventoryEmptyState.style.display = 'none';
+    currentRenderedCount = Math.min(RENDER_CHUNK_SIZE, items.length);
+    const initialBatch = items.slice(0, currentRenderedCount);
+
     if (state.viewMode === 'grid') {
       el.inventoryGrid.style.display = 'grid';
       el.tableViewContainer.style.display = 'none';
       // Render ONLY Grid Cards - keeps DOM lean and fast on mobile
-      el.inventoryGrid.innerHTML = items.map(item => createComponentCardHTML(item)).join('');
+      el.inventoryGrid.innerHTML = initialBatch.map(item => createComponentCardHTML(item)).join('');
       el.inventoryTableBody.innerHTML = '';
     } else {
       el.inventoryGrid.style.display = 'none';
       el.tableViewContainer.style.display = 'block';
       // Render ONLY Table Rows
-      el.inventoryTableBody.innerHTML = items.map(item => createComponentTableRowHTML(item)).join('');
+      el.inventoryTableBody.innerHTML = initialBatch.map(item => createComponentTableRowHTML(item)).join('');
       el.inventoryGrid.innerHTML = '';
     }
+
+    setupScrollSentinel();
   }
 
   function getStockStatusBadge(item) {
@@ -1051,7 +1136,7 @@
           <div class="project-component-row">
             <div class="project-comp-info">
               <div class="project-comp-thumb">
-                <img src="${safeThumb}" alt="${escapeHTML(loan.componentName)}">
+                <img src="${safeThumb}" alt="${escapeHTML(loan.componentName)}" loading="lazy" decoding="async" width="40" height="40">
               </div>
               <div style="min-width: 0;">
                 <div class="project-comp-title">${escapeHTML(loan.componentName)}</div>
@@ -3366,9 +3451,9 @@
           const scrollTop = window.scrollY || document.documentElement.scrollTop;
           const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
           if (scrollProgressBar && scrollHeight > 0) {
-            const progress = Math.min(100, Math.max(0, (scrollTop / scrollHeight) * 100));
-            scrollProgressBar.style.width = `${progress}%`;
-            scrollProgressBar.setAttribute('aria-valuenow', Math.round(progress));
+            const progressRatio = Math.min(1, Math.max(0, scrollTop / scrollHeight));
+            scrollProgressBar.style.transform = `scaleX(${progressRatio})`;
+            scrollProgressBar.setAttribute('aria-valuenow', Math.round(progressRatio * 100));
           }
 
           if (backToTopBtn) {

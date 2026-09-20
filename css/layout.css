@@ -105,16 +105,18 @@ h1, h2, h3, h4 {
   font-weight: 400;
 }
 
-/* UI/UX Essentials: Scroll Progress Bar */
+/* UI/UX Essentials: Scroll Progress Bar - GPU Compositor Accelerated */
 .scroll-progress-bar {
   position: fixed;
   top: 0;
   left: 0;
-  width: 0%;
+  width: 100%;
   height: 3px;
   background: linear-gradient(90deg, var(--accent-teal), var(--accent-gold, #c5a059));
   z-index: 9999;
-  transition: width 0.08s ease-out;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  will-change: transform;
   pointer-events: none;
 }
 
@@ -1546,11 +1548,12 @@ h1, h2, h3, h4 {
   box-shadow: var(--shadow-sm);
 }
 
-/* Grids */
+/* Grids - Fluid Multi-Ratio Scaling */
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-  gap: 1.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1.25rem;
+  width: 100%;
 }
 
 .table-view-container {
@@ -2249,10 +2252,17 @@ h1, h2, h3, h4 {
   }
 
   .inventory-grid, .projects-grid, .borrowers-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
     gap: 1rem;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  @media (max-width: 600px) {
+    .inventory-grid, .projects-grid, .borrowers-grid {
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
   }
 
   .subview-header-strip {
