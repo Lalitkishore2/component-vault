@@ -732,7 +732,8 @@
         const inBin = (item.locationBin || '').toLowerCase().includes(query);
         const inCat = (item.category || '').toLowerCase().includes(query);
         const inSpecs = (item.specs || '').toLowerCase().includes(query);
-        const inTags = (item.tags || []).some(t => t.toLowerCase().includes(query));
+        const tagsArr = Array.isArray(item.tags) ? item.tags : (typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        const inTags = tagsArr.some(t => t.toLowerCase().includes(query));
         const inBorrowerOrProject = (item.activeLoans || []).some(l => 
           l.recipientName.toLowerCase().includes(query) || 
           (l.project && l.project.toLowerCase().includes(query))
@@ -1266,7 +1267,8 @@
     el.compBin.value = item.locationBin || '';
     el.compTotalQty.value = item.totalQty;
     if (el.compDeadQty) el.compDeadQty.value = item.deadQty || 0;
-    el.compTags.value = (item.tags || []).join(', ');
+    const tagsArr = Array.isArray(item.tags) ? item.tags : (typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+    el.compTags.value = tagsArr.join(', ');
     el.compSpecs.value = item.specs || '';
 
     setImagePreviewState(item.image || '');

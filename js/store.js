@@ -552,6 +552,12 @@ class ComponentStore {
 
   // Helper to compute active loan metrics for an item
   computeItemMetrics(item) {
+    if (!item.id || item.id === 'undefined') {
+      item.id = 'comp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+    }
+    const tags = Array.isArray(item.tags)
+      ? item.tags
+      : (typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
     const today = new Date().toISOString().split('T')[0];
     const activeLoans = (item.loans || []).filter(l => l.status === 'active');
     const lentQty = activeLoans.reduce((sum, l) => sum + (Number(l.quantity) || 1), 0);
@@ -569,6 +575,7 @@ class ComponentStore {
 
     return {
       ...item,
+      tags,
       activeLoans,
       lentQty,
       deadQty,
